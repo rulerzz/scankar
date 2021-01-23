@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const User = require('./userModels');
+const mongoose = require("mongoose");
+const User = require("./userModels");
 const ObjectId = mongoose.ObjectId;
 
 const customerOrderSchema = new mongoose.Schema(
@@ -8,20 +8,20 @@ const customerOrderSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    orders:[ {
-      item: String,
-      quantity: Number,
-    },]
-,     
-    
-    userId:{
-      type:String,
-      required:true
+    orders: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Order",
+      },
+    ],
+    userId: {
+      type: String,
+      required: true,
     },
     subscriptions: {
-      type:Object,
-      minimize: false
-   },
+      type: Object,
+      minimize: false,
+    },
 
     price: {
       type: Number,
@@ -30,8 +30,8 @@ const customerOrderSchema = new mongoose.Schema(
 
     orderType: {
       type: String,
-      default: 'Take Home',
-      enum: ['Dine In', 'Take Home'],
+      default: "Take Home",
+      enum: ["Dine In", "Take Home", "Delivery"],
       required: true,
     },
     address: String,
@@ -42,27 +42,23 @@ const customerOrderSchema = new mongoose.Schema(
     updated: Date,
     status: {
       type: String,
-      default: 'Pending',
+      default: "Placed",
       enum: [
-        'Pending',
-        'Placed',
-        'Recieved',
-        'Processing',
-        'Delivered',
-        'Cancelled',
+        "Placed",
+        "Billed",
       ],
     },
     ordersubscriptions: {
-      type:Object,
-   },
+      type: Object,
+    },
     process: {
       type: String,
-      default: 'Pending',
-      enum: ['Pending', 'Accepted', 'Delivered'],
+      default: "Pending",
+      enum: ["Pending", "Running", "Completed"],
     },
     instruction: {
       type: String,
-      default: '',
+      default: "",
     },
     noOfSeatsRequested: {
       type: Number,
@@ -75,4 +71,4 @@ const customerOrderSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model('CustomerOrder', customerOrderSchema);
+module.exports = mongoose.model("CustomerOrder", customerOrderSchema);

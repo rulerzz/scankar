@@ -48,17 +48,24 @@ const userSchema = new mongoose.Schema(
         link: String,
       },
     ],
-    gst: {
+    sgst: {
       type: Number,
       trim: true,
+      default: 0
+    },
+    cgst: {
+      type: Number,
+      trim: true,
+      default: 0
     },
     servicecharge: {
       type: Number,
       trim: true,
+      default: 0
     },
-    servicechargeenable:{
+    servicechargeenable: {
       type: Boolean,
-      trim: true
+      trim: true,
     },
     companyName: {
       type: String,
@@ -88,7 +95,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    autoBilling: {
+    enablecgst: {
+      type: Boolean,
+      trim: true,
+    },
+    enablesgst: {
       type: Boolean,
       trim: true,
     },

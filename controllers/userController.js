@@ -73,6 +73,24 @@ exports.getAllUsers = async (req, res) => {
     });
   }
 };
+exports.getAllUsersData = async (req, res) => {
+  try {
+    console.log(req.query);
+    const users = await User.find().select({"firstName" : 1, "lastName" : 1, "_id" : 1}).sort({ firstName: "asc" });
+    res.status(200).json({
+      status: "Success",
+      results: users.length,
+      data: {
+        users,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "failed",
+      message: err,
+    });
+  }
+};
 exports.uploadpfp = async (req, res) => {
   console.log("---upload user pfp----");
   try {

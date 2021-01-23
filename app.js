@@ -41,12 +41,9 @@ app.use(function (req, res, next) {
 
 // My routes
 const userRouter = require("./routes/userRouter");
-const productRouter = require("./routes/productRouter");
-const orderRouter = require("./routes/orderRouter");
 const customerOrderRouter = require("./routes/customerOrderRouter");
-const resturentDetailsRouter = require("./routes/resturantDetailsRoutes");
 const authRoute = require("./routes/authRoute");
-const resturantMenuRoute = require("./routes/resturantMenuRoute");
+const itemRoute = require("./routes/itemRoute");
 // const logInRoute = require('./routes/logInRoute');
 
 app.use(cors());
@@ -77,11 +74,8 @@ webPush.setVapidDetails(
 
 // routes
 app.use("/api/v1/users", userRouter);
-app.use("/api/v1/products", productRouter);
-app.use("/api/v1/orders", orderRouter);
 app.use("/api/v1/customer-order", customerOrderRouter);
-app.use("/api/v1/info", resturentDetailsRouter);
 app.use("/api/v1/", authRoute);
-app.use("/api/v1/menu", resturantMenuRoute);
+app.use("/api/v1/item", itemRoute);
 
 // server
