@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const completedOrderModel = require("./completedOrderModel");
 const User = require("./userModels");
 const ObjectId = mongoose.ObjectId;
 
@@ -43,10 +44,7 @@ const customerOrderSchema = new mongoose.Schema(
     status: {
       type: String,
       default: "Placed",
-      enum: [
-        "Placed",
-        "Billed",
-      ],
+      enum: ["Placed", "Billed"],
     },
     ordersubscriptions: {
       type: Object,
@@ -66,6 +64,10 @@ const customerOrderSchema = new mongoose.Schema(
     user: {
       type: ObjectId,
       ref: User,
+    },
+    completed: {
+      type: ObjectId,
+      ref: completedOrderModel,
     },
   },
   { timestamps: true }

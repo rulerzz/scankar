@@ -147,6 +147,7 @@ exports.completeOrder = async (req, res) => {
       noOfSeatsRequested: Number(req.body.noOfSeatsRequested),
       userId: req.body.userId,
       orders: [mongoose.Types.ObjectId(order._id)],
+      completed: mongoose.Types.ObjectId(newordeer._id),
     });
     res.status(201).json({
       status: "Success",
