@@ -24,44 +24,36 @@ const userSchema = new mongoose.Schema(
       trim: true,
       unique: true,
       loadClass: true,
-      // validate: [validator.isEmail, 'Please provode a valid email'],
       match: [
         /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
         "Please add a valid email",
       ],
     },
-    menu: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Product",
-      },
-    ],
-    items: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Item",
-      },
-    ],
     categories: [
       {
-        name: String,
-        link: String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Category",
       },
     ],
     sgst: {
       type: Number,
       trim: true,
-      default: 0
+      default: 0,
+    },
+    gstin: {
+      type: String,
+      trim: true,
+      default: "",
     },
     cgst: {
       type: Number,
       trim: true,
-      default: 0
+      default: 0,
     },
     servicecharge: {
       type: Number,
       trim: true,
-      default: 0
+      default: 0,
     },
     servicechargeenable: {
       type: Boolean,
@@ -105,15 +97,11 @@ const userSchema = new mongoose.Schema(
     },
     mobileNumber: {
       type: String,
-      // required: true,
+      required: true,
       trim: true,
       unique: true,
     },
     photo: String,
-    userInfo: {
-      type: String,
-      trim: true,
-    },
     status: {
       type: String,
       default: "Active",
@@ -125,48 +113,24 @@ const userSchema = new mongoose.Schema(
       minlength: 8,
       select: false,
     },
-
-    subscriptions: {
-      type: Object,
-      minimize: false,
-    },
     tableCount: {
       type: Number,
     },
-    // subscription: {
-    //   type: String,
-    //   required: [true, 'Please confirm your password'],
-    //   validate: {
-    //     //  This only works on create and save
-    //     validator: function (el) {
-    //       return el === this.password;
-    //     },
-    //     message: 'Passwords are not the same',
-    //   },
-    // },
-    // salt: String,
     role: {
       type: String,
       default: "user",
       enum: ["user", "admin", "accounts", "superadmin"],
       required: true,
     },
-
     ownerType: {
       type: String,
       default: "returantowner",
       enum: ["returantowner", "hotelowner"],
-      required: true,
+      required: false,
     },
-    resetPasswordToken: String,
-    resetPasswordExpire: Date,
     createdAt: {
       type: Date,
       default: Date.now,
-    },
-    purchases: {
-      type: Array,
-      default: [],
     },
   },
   { timestamps: true }

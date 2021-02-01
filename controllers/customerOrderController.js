@@ -1,20 +1,11 @@
 const CustomerOrder = require("../models/customerOrderModel");
-const order = require("./orderController");
-const Admin = require("../models/userModels");
-const Product = require("../models/productModel");
-const { subscription } = require("./userController");
 const webPush = require("web-push");
 const User = require("./../models/userModels");
 const Item = require("./../models/itemModel");
 const completedOrderModel = require("../models/completedOrderModel");
 const mongoose = require("mongoose");
 const orderModel = require("../models/orderModel");
-webPush.setVapidDetails(
-  "mailto:test@example.com",
-  process.env.Public_Key,
-  process.env.Private_Key
-);
-// Controllers
+
 // to get all order
 exports.getAllOrders = async (req, res) => {
   try {
@@ -22,23 +13,13 @@ exports.getAllOrders = async (req, res) => {
     let user = await User.findById(req.user._id);
     if (user.role == "superadmin") {
       orders = await CustomerOrder.find()
-        .populate({
-          path: "orders",
-          populate: {
-            path: "contents.item",
-          },
-        })
         .skip(Number(req.query.offset))
         .limit(10)
         .sort({ palced_time: "desc" });
     } else {
-      orders = await CustomerOrder.find({ userId: req.user._id })
-        .populate({
-          path: "orders",
-          populate: {
-            path: "contents.item",
-          },
-        })
+      orders = await CustomerOrder.find({ user: req.user._id,
+      process : ["Pending", "Running"]
+      })
         .skip(Number(req.query.offset))
         .limit(10)
         .sort({ palced_time: "desc" });
@@ -64,16 +45,10 @@ exports.getAllOrders = async (req, res) => {
 exports.getOrders = async (req, res) => {
   try {
     let orders = await CustomerOrder.find({
-      userId: req.user._id,
-      process: ["Pending", "Running"],
-    })
-      .populate({
-        path: "orders",
-        populate: {
-          path: "contents.item",
-        },
-      })
-      .sort({ palced_time: "desc" });
+      user: req.user._id,
+      status: ["Placed"],
+      orderType: ["Dine In"]
+    }).sort({ palced_time: "desc" });
 
     res.status(200).json({
       status: "Success",
@@ -126,33 +101,24 @@ exports.getSingleOrder = async (req, res) => {
 // to complete an order
 exports.completeOrder = async (req, res) => {
   try {
-    let orderlist = [];
-    const newordeer = await completedOrderModel.create(req.body);
-    req.body.orders.forEach(element => {
-       orderlist.push({
-         item : mongoose.Types.ObjectId(element._id),
-         quantity : element.quantity
-       });
-    });
-    console.log(orderlist);
-    const order = await orderModel.create({
-      contents: orderlist
-    });
-    await CustomerOrder.create({
+    let order = await CustomerOrder.create({
       orderType: req.body.orderType,
-      status: "Placed",
-      process: "Running",
-      userName: req.body.userName,
-      price: req.body.total,
-      noOfSeatsRequested: Number(req.body.noOfSeatsRequested),
-      userId: req.body.userId,
-      orders: [mongoose.Types.ObjectId(order._id)],
-      completed: mongoose.Types.ObjectId(newordeer._id),
+      status: req.body.status,
+      process: req.body.process,
+      booker: req.body.booker,
+      price: req.body.price,
+      tableNo: Number(req.body.tableNo),
+      user: mongoose.Types.ObjectId(req.body.user),
+      items: req.body.items,
+      discount: req.body.discount,
+      placed_time: req.body.placed_time,
+      instruction: req.body.instruction,
+      address: req.body.address
     });
     res.status(201).json({
       status: "Success",
       message: "Order added to DB",
-      data: newordeer
+      data: order
     });
   } catch (err) {
     console.log(err);
@@ -165,7 +131,7 @@ exports.completeOrder = async (req, res) => {
 
 exports.checktable = async (req, res) => {
   try {
-    const order = await CustomerOrder.find({noOfSeatsRequested : req.body.tableno , process : "Running", userId: req.body.user});
+    const order = await CustomerOrder.find({tableNo : req.body.tableno , status : "Placed", user: req.body.user});
     res.status(200).json({
       status: "success",
       data: order
@@ -182,9 +148,18 @@ exports.updateOrderStatus = async (req, res) => {
   try {
     const order = await CustomerOrder.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      {
+        orderType: req.body.orderType,
+        booker: req.body.booker,
+        price: req.body.price,
+        items: req.body.items,
+        discount: req.body.discount,
+        instruction: req.body.instruction,
+        address: req.body.address,
+      },
       {
         new: true,
+        useFindAndModify: false
       }
     );
 
@@ -202,4 +177,30 @@ exports.updateOrderStatus = async (req, res) => {
   }
 };
 
-// In future need to add
+exports.update = async (req, res) => {
+  try {
+    const order = await CustomerOrder.findByIdAndUpdate(
+      req.params.id,
+      {
+        status : req.body.status,
+        process: req.body.process
+      },
+      {
+        new: true,
+        useFindAndModify: false,
+      }
+    );
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        order,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "Error",
+      err,
+    });
+  }
+};

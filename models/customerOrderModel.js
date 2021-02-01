@@ -5,69 +5,53 @@ const ObjectId = mongoose.ObjectId;
 
 const customerOrderSchema = new mongoose.Schema(
   {
-    userName: {
-      type: String,
-      required: true,
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true
     },
-    orders: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Order",
-      },
+    items: [
+
     ],
+    booker: {
+      type: String
+    },
     userId: {
-      type: String,
-      required: true,
+      type: String
     },
-    subscriptions: {
-      type: Object,
-      minimize: false,
-    },
-
     price: {
-      type: Number,
-      required: true,
+      type: Number
     },
-
+    discount: {
+      type: Number
+    },
     orderType: {
       type: String,
       default: "Take Home",
       enum: ["Dine In", "Take Home", "Delivery"],
-      required: true,
+      required: true
     },
     address: String,
-    palced_time: {
+    placed_time: {
       type: Date,
-      default: Date.now,
+      default: Date.now
     },
-    updated: Date,
     status: {
       type: String,
       default: "Placed",
-      enum: ["Placed", "Billed"],
-    },
-    ordersubscriptions: {
-      type: Object,
+      enum: ["Placed", "Billed", "Closed"]
     },
     process: {
       type: String,
       default: "Pending",
-      enum: ["Pending", "Running", "Completed"],
+      enum: ["Pending", "Running", "Completed", "Rejected"]
     },
     instruction: {
       type: String,
-      default: "",
+      default: ""
     },
-    noOfSeatsRequested: {
-      type: Number,
-    },
-    user: {
-      type: ObjectId,
-      ref: User,
-    },
-    completed: {
-      type: ObjectId,
-      ref: completedOrderModel,
+    tableNo: {
+      type: Number
     },
   },
   { timestamps: true }

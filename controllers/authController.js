@@ -1,4 +1,3 @@
-const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const User = require("../models/userModels");
 const ErrorResponse = require("../utils/errorResponse");
@@ -6,7 +5,7 @@ const asyncHandler = require("../middleware/async");
 const sendEmail = require("../utils/emailHandler");
 // routes
 
-// register/signup
+// register 
 exports.register = asyncHandler(async (req, res) => {
   try {
     const {
@@ -42,10 +41,8 @@ exports.register = asyncHandler(async (req, res) => {
     });
   }
 });
-// ###########################################################################
-// ###########################################################################
 
-// login/signin
+// login
 exports.login = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
   //validation email and password
@@ -66,8 +63,6 @@ exports.login = asyncHandler(async (req, res, next) => {
   sendTokenResponse(user, 200, res);
 });
 
-// ###########################################################################
-// ###########################################################################
 // ADMIN LOGIN
 exports.adminLogin = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
@@ -92,8 +87,6 @@ exports.adminLogin = asyncHandler(async (req, res, next) => {
   sendTokenResponse(user, 200, res);
 });
 
-// ###########################################################################
-// ###########################################################################
 // forgot password
 exports.forgotPassword = asyncHandler(async (req, res, next) => {
   // 1) Get user based on POSTed email
@@ -131,8 +124,6 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
   }
 });
 
-// ###########################################################################
-// ###########################################################################
 // reset password
 exports.resetPassword = asyncHandler(async (req, res, next) => {
   // Get hashed token
@@ -160,47 +151,6 @@ exports.resetPassword = asyncHandler(async (req, res, next) => {
   sendTokenResponse(user, 200, res);
 });
 
-// ###########################################################################
-// ###########################################################################
-// @desc      Update user details
-// @route     PUT /api/v1/updatedetails
-// @access    Private
-// exports.updateDetails = asyncHandler(async (req, res, next) => {
-//   const fieldsToUpdate = {
-//     firstName: req.body.firstName,
-//     lastName: req.body.lastName,
-//     email: req.body.email,
-//   };
-
-//   const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
-//     new: true,
-//     runValidators: true,
-//   });
-
-//   res.status(200).json({
-//     success: true,
-//     data: user,
-//   });
-// });
-// ###########################################################################
-// ###########################################################################
-// @desc      Update password
-// @route     PUT /api/v1/updatepassword
-// @access    Private
-// exports.updatePassword = asyncHandler(async (req, res, next) => {
-//   const user = await User.findById(req.user.id).select('+password');
-
-//   // Check current password
-//   if (!(await user.matchPassword(req.body.currentPassword))) {
-//     return next(new ErrorResponse('Password is incorrect', 401));
-//   }
-
-//   user.password = req.body.newPassword;
-//   await user.save();
-
-//   sendTokenResponse(user, 200, res);
-// });
-//get token from model, create a cookie, send res
 const sendTokenResponse = (user, statusCode, res) => {
   const token = user.getSignedJwtToken();
   const type = user.ownerType;
@@ -223,8 +173,6 @@ const sendTokenResponse = (user, statusCode, res) => {
   });
 };
 
-// ###########################################################################
-// ###########################################################################
 // to see the logged user
 exports.getMe = asyncHandler(async (req, res, next) => {
   // user is already available in req due to the protect middleware

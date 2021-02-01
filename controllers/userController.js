@@ -1,59 +1,13 @@
-const fs = require("fs");
 const User = require("./../models/userModels");
+const Category = require("./../models/categoryModel");
 const Item = require("./../models/itemModel");
-const webPush = require("web-push");
 const bufferToString = require("../utils/convertBufferToStr");
 const cloudinary = require("../utils/cloudinary");
-let subscriptions = {};
-let endusersubscriptions = {};
-console.log("subscription", subscriptions);
-
-// to get all user
-
-const publicVapidKey = process.env.Public_Key;
-console.log(publicVapidKey);
-const privateVapidKey = process.env.Private_Key;
-webPush.setVapidDetails(
-  "mailto:test@example.com",
-  process.env.Public_Key,
-  process.env.Private_Key
-);
-
-exports.subscription = async (req, res) => {
-  subscriptions = req.body;
-
-  //console.log("subscription in notififcation",subscriptions);
-
-  const payload = JSON.stringify({
-    title: "Hello!",
-    body: "It works.",
-  });
-
-  // webPush.sendNotification(subscriptions, payload)
-  //   .then(result => console.log(result))
-  //   .catch(e => console.error(e))
-  res.status(200).send(subscriptions);
-};
-exports.endusersubscription = async (req, res) => {
-  endusersubscriptions = req.body;
-
-  console.log("end user subscription", endusersubscriptions);
-
-  const payloads = JSON.stringify({
-    title: "Hello!",
-    body: "user is here  .",
-  });
-  // webPush.sendNotification(endusersubscriptions, payloads)
-  //   .then(result => console.log(result))
-  //   .catch(e => console.error(e))
-  res.status(200).send(endusersubscriptions);
-};
+const mongoose = require("mongoose");
 
 exports.getAllUsers = async (req, res) => {
   try {
-    console.log(req.query);
     const users = await User.find()
-      // .populate("menu")
       .skip(Number(req.query.offset))
       .limit(10)
       .sort({ createdAt: "desc" });
@@ -75,8 +29,9 @@ exports.getAllUsers = async (req, res) => {
 };
 exports.getAllUsersData = async (req, res) => {
   try {
-    console.log(req.query);
-    const users = await User.find().select({"firstName" : 1, "lastName" : 1, "_id" : 1}).sort({ firstName: "asc" });
+    const users = await User.find()
+      .select({ firstName: 1, lastName: 1, _id: 1 })
+      .sort({ firstName: "asc" });
     res.status(200).json({
       status: "Success",
       results: users.length,
@@ -92,7 +47,6 @@ exports.getAllUsersData = async (req, res) => {
   }
 };
 exports.uploadpfp = async (req, res) => {
-  console.log("---upload user pfp----");
   try {
     let imageContent = bufferToString(req.file.originalname, req.file.buffer)
       .content;
@@ -128,10 +82,8 @@ exports.uploadpfp = async (req, res) => {
 };
 // to get a single user
 exports.getSingleUser = async (req, res) => {
-  console.log("---from single user----");
   try {
-    const user = await User.findById(req.params.id).populate("menu");
-    // console.log("-----userMenu-------",user)
+    const user = await User.findById(req.params.id);
     res.status(200).json({
       status: "Success",
       data: {
@@ -154,13 +106,50 @@ exports.createCategory = async (req, res) => {
       else {
         image_url = imageResponse.secure_url;
         let data = {
-          link: image_url,
+          user: req.params.id,
+          image: image_url,
           name: req.params.name,
+          description: req.params.description,
+          cuisine: req.params.cuisine,
         };
-        User.findOneAndUpdate(
-          { _id: req.params.id },
-          { $push: { categories: data } },
-          { new: true },
+        Category.create(data).then((newCategory, err) => {
+          if (err) {
+            throw err;
+          } else {
+            User.findOneAndUpdate(
+              { _id: req.params.id },
+              { $push: { categories: newCategory._id } },
+              { new: true, useFindAndModify: false },
+              function (err, doc) {
+                if (err) {
+                  throw err;
+                } else {
+                  res.status(200).json({
+                    status: "Success",
+                  });
+                }
+              }
+            );
+          }
+        });
+      }
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "failed",
+      message: err,
+    });
+  }
+};
+exports.deleteCategory = async (req, res) => {
+  try {
+    Category.findByIdAndDelete(req.params.categoryid, function (err, doc) {
+      if (err) {
+        throw err;
+      } else {
+        User.updateOne(
+          { _id: req.params.userid },
+          { $pull: { categories: req.params.categoryid } },
           function (err, doc) {
             if (err) {
               throw err;
@@ -176,7 +165,7 @@ exports.createCategory = async (req, res) => {
   } catch (err) {
     res.status(400).json({
       status: "failed",
-      message: err,
+      message: JSON.stringify(err.message),
     });
   }
 };
@@ -226,18 +215,19 @@ exports.setGst = async (req, res) => {
 };
 exports.getalldata = async (req, res) => {
   try {
-    const items = await Item.find({
-      user: req.params.id,
-    });
     const user = await User.find({
       _id: req.params.id,
+    }).populate({
+      path: "categories",
+      populate: {
+        path: "items",
+      },
     });
     // console.log("-----userMenu-------",user)
     res.status(200).json({
       status: "Success",
       data: {
-        user: user,
-        items: items,
+        user: user
       },
     });
   } catch (err) {
@@ -259,7 +249,7 @@ exports.createItem = async (req, res) => {
           user: req.body.id,
           name: req.body.name,
           price: req.body.price,
-          category: req.body.category,
+          category: mongoose.Types.ObjectId(req.body.category),
           image: image_url,
           config: JSON.parse(req.body.config),
           addons: JSON.parse(req.body.addon),
@@ -268,9 +258,20 @@ exports.createItem = async (req, res) => {
           if (err) {
             throw err;
           } else {
-            res.status(200).json({
-              status: "Success",
-            });
+            Category.findOneAndUpdate(
+              { _id: req.body.category },
+              { $push: { items: newItem._id } },
+              { new: true, useFindAndModify: false },
+              function (err, doc) {
+                if (err) {
+                  throw err;
+                } else {
+                  res.status(200).json({
+                    status: "Success",
+                  });
+                }
+              }
+            );
           }
         });
       }
@@ -294,6 +295,7 @@ exports.updateItem = async (req, res) => {
     await Item.findOneAndUpdate(
       { _id: req.body._id },
       data,
+      {useFindAndModify: false},
       function (err, doc) {
         if (err) {
           res.status(400).json("Error while updating!");
@@ -359,9 +361,19 @@ exports.deleteItem = async (req, res) => {
       if (err) return handleError(err);
       // deleted at most one document
       else {
-        res.status(200).json({
-          status: "Success",
-        });
+        Category.updateOne(
+          { _id: req.params.categoryid },
+          { $pull: { items: req.params.id } },
+          function (err, doc) {
+            if (err) {
+              throw err;
+            } else {
+              res.status(200).json({
+                status: "Success",
+              });
+            }
+          }
+        );
       }
     });
   } catch (err) {
@@ -471,8 +483,6 @@ exports.createUser = async (req, res) => {
 // to update an user
 exports.updateUser = async (req, res) => {
   try {
-    console.log("req.body.endpoint", req.body.Subscription);
-    console.log("global.subscription.endpoint", subscriptions.endpoint);
     if (req.body.Subscription === subscriptions.endpoint) {
       console.log("true");
       await User.updateOne(
@@ -506,8 +516,6 @@ exports.updateUser = async (req, res) => {
 };
 exports.update = async (req, res) => {
   try {
-    console.log("update request");
-    console.log(req.body);
     if (req.body._id != undefined || req.body._id != null) {
       await User.updateOne(
         { _id: req.body._id },

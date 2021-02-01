@@ -5,8 +5,6 @@ const {
   getSingleUser,
   updateUser,
   deleteUser,
-  subscription,
-  endusersubscription,
   getSingleUsercategory,
   getSingleUsercategoryitm,
   update,
@@ -19,7 +17,8 @@ const {
   deleteItem,
   updateItem,
   updateItemWithPic,
-  getAllUsersData
+  getAllUsersData,
+  deleteCategory
 } = require("../controllers/userController");
 const { protect, authorize } = require('../middleware/auth');
 const cloudUpload = require("../utils/multer");
@@ -27,14 +26,13 @@ const cloudUpload = require("../utils/multer");
 const router = express.Router();
 
 router.route('/').get(getAllUsers).post(createUser);
-router.route('/notifications/subscribe').post(subscription);
-router.route('/enduser/notifications/subscribe').post(endusersubscription);
 router.route('/endurlupdate').put(updateUser);
 router.route('/getcategory/:id').get(getSingleUsercategory);
-router.route('/category/:id/:name').get(getSingleUsercategoryitm).post(protect,cloudUpload,createCategory);
+router.route('/category/:id/:name/:description/:cuisine').get(getSingleUsercategoryitm).post(protect,cloudUpload,createCategory);
+router.route("/deletecategory/:userid/:categoryid").get(deleteCategory);
 router.route("/update").put(update);
 router.route("/insertuseritem/:id").get(getalldata).post(protect, cloudUpload, createItem);
-router.route("/deleteuseritem/:id").get(deleteItem);
+router.route("/deleteuseritem/:id/:categoryid").get(deleteItem);
 router.route("/servicecharge/:id").post(protect, setCharge);
 router.route("/updateitemrouter").post(updateItem);
 router.route("/updatepictureitemroute").post(protect, cloudUpload, updateItemWithPic);
