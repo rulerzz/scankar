@@ -237,6 +237,30 @@ exports.getalldata = async (req, res) => {
     });
   }
 };
+exports.findCategoryOrItems = async (req, res) => {
+  try {
+    const user = await User.find({
+      _id: req.params.id,
+    }).populate({
+      path: "categories",
+      populate: {
+        path: "items",
+      },
+    });
+    // console.log("-----userMenu-------",user)
+    res.status(200).json({
+      status: "Success",
+      data: {
+        user: user,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "failed",
+      message: "Invalid ID",
+    });
+  }
+};
 exports.createItem = async (req, res) => {
   try {
     let imageContent = bufferToString(req.file.originalname, req.file.buffer)

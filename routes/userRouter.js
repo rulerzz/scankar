@@ -18,7 +18,8 @@ const {
   updateItem,
   updateItemWithPic,
   getAllUsersData,
-  deleteCategory
+  deleteCategory,
+  findCategoryOrItems,
 } = require("../controllers/userController");
 const { protect, authorize } = require('../middleware/auth');
 const cloudUpload = require("../utils/multer");
@@ -39,4 +40,7 @@ router.route("/updatepictureitemroute").post(protect, cloudUpload, updateItemWit
 router.route("/gst/:id").post(protect, setGst);
 router.route("/search").get(protect, getAllUsersData);
 router.route('/:id').get(getSingleUser).delete(deleteUser).post(protect,cloudUpload, uploadpfp);
+router
+  .route("/search/:id")
+  .get(findCategoryOrItems);
 module.exports = router;
