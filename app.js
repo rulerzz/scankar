@@ -5,9 +5,7 @@ const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const app = express();
-const fs = require('fs');
-const path = require("path");
-const https = require('https');
+const webPush = require("web-push");
 dotenv.config({ path: "./config.env" });
 
 const port = process.env.PORT || 5000;
@@ -32,23 +30,20 @@ mongoose
   .catch(() => {
     console.log("PROBLEM CONNECTING DB");
   });
-const sslserver = https.createServer(
-  {
-    key: fs.readFileSync(path.join(__dirname, "cert", "key.pem")),
-    cert: fs.readFileSync(path.join(__dirname, "cert", "cert.pem")),
-  },
-  app
-);
-sslserver.listen(port, () => {
-  console.log('HTTPS Server on port' + port );
-})
+const server = app.listen(port, () => {
+  console.log(`Port is running at ${port}`);
+});
+const io = require("socket.io")(server);
+app.use(function (req, res, next) {
+  req.io = io;
+  next();
+});
 
 // My routes
 const userRouter = require("./routes/userRouter");
 const customerOrderRouter = require("./routes/customerOrderRouter");
 const authRoute = require("./routes/authRoute");
 const itemRoute = require("./routes/itemRoute");
-const { fstat } = require("fs");
 // const logInRoute = require('./routes/logInRoute');
 
 app.use(cors());
@@ -67,6 +62,16 @@ app.use(express.json());
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
+const publicVapidKey = process.env.Public_Key;
+
+const privateVapidKey = process.env.Private_Key;
+
+webPush.setVapidDetails(
+  "mailto:test@example.com",
+  publicVapidKey,
+  privateVapidKey
+);
+
 // routes
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/customer-order", customerOrderRouter);
