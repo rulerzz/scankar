@@ -7,6 +7,7 @@ const {
   completeOrder,
   checktable,
   update,
+  getOtherOrders,
 } = require("../controllers/customerOrderController");
 const { protect, authorize } = require('../middleware/auth');
 
@@ -17,6 +18,7 @@ router.route('/').get(protect,getAllOrders);
 router.route('/update-order/:id').patch(updateOrderStatus);
 router.route("/update-status/:id").patch(update);
 router.route("/orderinfo/:id").get(protect, getOrders);
+router.route("/otherorders/:id").get(protect, getOtherOrders);
 router.route("/completeorder").post(protect, completeOrder);
 router.route("/checktable").post(protect, checktable);
 module.exports = router;

@@ -61,6 +61,26 @@ exports.getOrders = async (req, res) => {
     });
   }
 };
+exports.getOtherOrders = async (req, res) => {
+  try {
+    let orders = await CustomerOrder.find({
+      user: req.user._id,
+      status: ["Placed"],
+      process: ["Pending", "Running"],
+      orderType: ["Take Home", "Delivery"],
+    }).sort({ palced_time: "desc" });
+
+    res.status(200).json({
+      status: "Success",
+      data: orders,
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "failed",
+      message: err,
+    });
+  }
+};
 exports.getnewOrders = async (req, res) => {
   try {
     console.log("userIddd", req.user._id);

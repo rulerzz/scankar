@@ -125,7 +125,7 @@ const userSchema = new mongoose.Schema(
     ownerType: {
       type: String,
       default: "returantowner",
-      enum: ["returantowner", "hotelowner"],
+      enum: ["returantowner", "hotelowner","registered"],
       required: false,
     },
     createdAt: {

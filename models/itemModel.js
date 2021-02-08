@@ -18,8 +18,8 @@ const itemSchema = new mongoose.Schema(
       trim: true,
     },
     category: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Category",
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
     },
     image: {
       type: String,
@@ -27,15 +27,18 @@ const itemSchema = new mongoose.Schema(
     config: [
       {
         name: String,
-        price: Number
+        price: Number,
       },
     ],
     addons: [
       {
-       name: String,
-       price: Number
+        name: String,
+        price: Number,
       },
     ],
+    description: {
+      type: String
+    },
   },
   { timestamps: true }
 );

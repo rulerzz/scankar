@@ -141,6 +141,60 @@ exports.createCategory = async (req, res) => {
     });
   }
 };
+exports.updateCategory = async (req, res) => {
+  try {
+    let categori = JSON.parse(req.body.category);
+    if(req.body.photo != "undefined"){
+      // UPLOAD PIC AND UPDATE
+      let imageContent = bufferToString(req.file.originalname, req.file.buffer)
+        .content;
+      await cloudinary.uploader.upload(imageContent, (err, imageResponse) => {
+        if (err) throw err;
+        else {
+          image_url = imageResponse.secure_url;
+          categori.image = image_url;
+          Category.findOneAndUpdate(
+            { _id: categori._id },
+            categori,
+            { useFindAndModify: false },
+            function (err, doc) {
+              if (err) {
+                throw err;
+              } else {
+                res.status(200).json({
+                  status: "Success",
+                  category: doc,
+                });
+              }
+            }
+          );
+        }
+      });
+    }
+    else{
+      // DONT UPDATE PIC
+       Category.findByIdAndUpdate(categori._id,
+         categori,
+         { useFindAndModify: false },
+         function (err, doc) {
+           if (err) {
+             throw err;
+           } else {
+             res.status(200).json({
+               status: "Success",
+               category: doc,
+             });
+           }
+         }
+       );
+    }
+  } catch (err) {
+    res.status(400).json({
+      status: "failed",
+      message: err,
+    });
+  }
+};
 exports.deleteCategory = async (req, res) => {
   try {
     Category.findByIdAndDelete(req.params.categoryid, function (err, doc) {
@@ -277,6 +331,7 @@ exports.createItem = async (req, res) => {
           image: image_url,
           config: JSON.parse(req.body.config),
           addons: JSON.parse(req.body.addon),
+          description: req.body.description
         };
         Item.create(data).then((newItem, err) => {
           if (err) {
@@ -312,6 +367,7 @@ exports.updateItem = async (req, res) => {
     let data = {
       name: req.body.name,
       price: req.body.price,
+      description: req.body.description,
       category: req.body.category,
       config: req.body.config,
       addons: req.body.addons,
@@ -350,6 +406,7 @@ exports.updateItemWithPic = async (req, res) => {
         let data = {
           name: req.body.name,
           price: req.body.price,
+          description: req.body.description,
           category: req.body.category,
           config: JSON.parse(req.body.config),
           addons: JSON.parse(req.body.addons),
