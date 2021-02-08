@@ -1,32 +1,58 @@
 const CustomerOrder = require("../models/customerOrderModel");
-const webPush = require("web-push");
 const User = require("./../models/userModels");
-const Item = require("./../models/itemModel");
-const completedOrderModel = require("../models/completedOrderModel");
 const mongoose = require("mongoose");
-const orderModel = require("../models/orderModel");
+const moment = require("moment");
+var io = require("../app");
+
+let emitcreateorderaction = function (data) {
+  io.sockets.emit("emitcreateorderaction", data);
+  console.log("Emitting order creation ping!");
+};
 
 // to get all order
 exports.getAllOrders = async (req, res) => {
   try {
     let orders;
-    let user = await User.findById(req.user._id);
+    let count;
+    const today = moment().startOf("day");
+    let user = await User.findById(req.query.user);
     if (user.role == "superadmin") {
       orders = await CustomerOrder.find()
         .skip(Number(req.query.offset))
         .limit(10)
-        .sort({ palced_time: "desc" });
+        .sort({ placed_time: "desc" });
+      count = await CustomerOrder.countDocuments({});
     } else {
-      orders = await CustomerOrder.find({ user: req.user._id,
-      process : ["Pending", "Running"]
+      orders = await CustomerOrder.find({
+        user: req.user._id,
+        $or: [
+          { process: "Pending" },
+          { process: "Running" },
+          { process: "Completed" },
+        ],
+        $or: [{ status: "Placed" }, { status: "Billed" }],
+        placed_time: {
+          $gte: today.toDate(),
+          $lte: moment(today).endOf("day").toDate(),
+        },
       })
         .skip(Number(req.query.offset))
         .limit(10)
-        .sort({ palced_time: "desc" });
+        .sort({ placed_time: "desc" });
+      count = await CustomerOrder.countDocuments({
+        user: req.user._id,
+        $or: [
+          { process: "Pending" },
+          { process: "Running" },
+          { process: "Completed" },
+        ],
+        $or: [{ status: "Placed" }, { status: "Billed" }, { status: "Closed" }],
+        placed_time: {
+          $gte: today.toDate(),
+          $lte: moment(today).endOf("day").toDate(),
+        },
+      });
     }
-
-    // console.log("customer order", orders)
-    const count = await CustomerOrder.countDocuments();
     res.status(200).json({
       status: "Success",
       results: orders.length,
@@ -44,10 +70,15 @@ exports.getAllOrders = async (req, res) => {
 };
 exports.getOrders = async (req, res) => {
   try {
+    const today = moment().startOf("day");
     let orders = await CustomerOrder.find({
-      user: req.user._id,
-      status: ["Placed"],
-      orderType: ["Dine In"]
+      user: req.params.id,
+      $or: [{ status: "Placed" }],
+      orderType: ["Dine In"],
+      placed_time: {
+        $gte: today.toDate(),
+        $lte: moment(today).endOf("day").toDate(),
+      },
     }).sort({ palced_time: "desc" });
 
     res.status(200).json({
@@ -63,12 +94,16 @@ exports.getOrders = async (req, res) => {
 };
 exports.getOtherOrders = async (req, res) => {
   try {
+    const today = moment().startOf("day");
     let orders = await CustomerOrder.find({
-      user: req.user._id,
+      user: req.params.id,
       status: ["Placed"],
-      process: ["Pending", "Running"],
       orderType: ["Take Home", "Delivery"],
-    }).sort({ palced_time: "desc" });
+      placed_time: {
+        $gte: today.toDate(),
+        $lte: moment(today).endOf("day").toDate(),
+      },
+    }).sort({ placed_time: "desc" });
 
     res.status(200).json({
       status: "Success",
@@ -133,12 +168,13 @@ exports.completeOrder = async (req, res) => {
       discount: req.body.discount,
       placed_time: req.body.placed_time,
       instruction: req.body.instruction,
-      address: req.body.address
+      address: req.body.address,
     });
+    emitcreateorderaction(order);
     res.status(201).json({
       status: "Success",
       message: "Order added to DB",
-      data: order
+      data: order,
     });
   } catch (err) {
     console.log(err);
@@ -151,10 +187,14 @@ exports.completeOrder = async (req, res) => {
 
 exports.checktable = async (req, res) => {
   try {
-    const order = await CustomerOrder.find({tableNo : req.body.tableno , status : "Placed", user: req.body.user});
+    const order = await CustomerOrder.find({
+      tableNo: req.body.tableno,
+      status: "Placed",
+      user: req.body.user,
+    });
     res.status(200).json({
       status: "success",
-      data: order
+      data: order,
     });
   } catch (err) {
     res.status(400).json({
@@ -179,7 +219,7 @@ exports.updateOrderStatus = async (req, res) => {
       },
       {
         new: true,
-        useFindAndModify: false
+        useFindAndModify: false,
       }
     );
 
@@ -202,8 +242,8 @@ exports.update = async (req, res) => {
     const order = await CustomerOrder.findByIdAndUpdate(
       req.params.id,
       {
-        status : req.body.status,
-        process: req.body.process
+        status: req.body.status,
+        process: req.body.process,
       },
       {
         new: true,

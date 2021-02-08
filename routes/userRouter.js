@@ -21,9 +21,11 @@ const {
   deleteCategory,
   findCategoryOrItems,
   updateCategory,
+  bulkUpload,
 } = require("../controllers/userController");
 const { protect, authorize } = require("../middleware/auth");
 const cloudUpload = require("../utils/multer");
+const uploadFile = require("../utils/excelMulter"); 
 
 const router = express.Router();
 
@@ -55,4 +57,5 @@ router
   .delete(deleteUser)
   .post(protect, cloudUpload, uploadpfp);
 router.route("/search/:id").get(findCategoryOrItems);
+//router.route("/bulkupload/:id").post(protect, uploadFile, bulkUpload);
 module.exports = router;

@@ -5,7 +5,6 @@ const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const app = express();
-const webPush = require("web-push");
 dotenv.config({ path: "./config.env" });
 
 const port = process.env.PORT || 5000;
@@ -34,10 +33,14 @@ const server = app.listen(port, () => {
   console.log(`Port is running at ${port}`);
 });
 const io = require("socket.io")(server);
-app.use(function (req, res, next) {
-  req.io = io;
-  next();
+io.on("connection", function (socket) {
+  console.log("Socket established with id: " + socket.id);
+
+  socket.on("disconnect", function () {
+    console.log("Socket disconnected: " + socket.id);
+  });
 });
+module.exports = io;
 
 // My routes
 const userRouter = require("./routes/userRouter");
@@ -62,15 +65,6 @@ app.use(express.json());
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
-const publicVapidKey = process.env.Public_Key;
-
-const privateVapidKey = process.env.Private_Key;
-
-webPush.setVapidDetails(
-  "mailto:test@example.com",
-  publicVapidKey,
-  privateVapidKey
-);
 
 // routes
 app.use("/api/v1/users", userRouter);

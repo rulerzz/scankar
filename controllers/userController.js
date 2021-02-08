@@ -4,7 +4,7 @@ const Item = require("./../models/itemModel");
 const bufferToString = require("../utils/convertBufferToStr");
 const cloudinary = require("../utils/cloudinary");
 const mongoose = require("mongoose");
-
+const csvtojson = require("csvtojson");
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find()
@@ -144,7 +144,7 @@ exports.createCategory = async (req, res) => {
 exports.updateCategory = async (req, res) => {
   try {
     let categori = JSON.parse(req.body.category);
-    if(req.body.photo != "undefined"){
+    if (req.body.photo != "undefined") {
       // UPLOAD PIC AND UPDATE
       let imageContent = bufferToString(req.file.originalname, req.file.buffer)
         .content;
@@ -170,23 +170,23 @@ exports.updateCategory = async (req, res) => {
           );
         }
       });
-    }
-    else{
+    } else {
       // DONT UPDATE PIC
-       Category.findByIdAndUpdate(categori._id,
-         categori,
-         { useFindAndModify: false },
-         function (err, doc) {
-           if (err) {
-             throw err;
-           } else {
-             res.status(200).json({
-               status: "Success",
-               category: doc,
-             });
-           }
-         }
-       );
+      Category.findByIdAndUpdate(
+        categori._id,
+        categori,
+        { useFindAndModify: false },
+        function (err, doc) {
+          if (err) {
+            throw err;
+          } else {
+            res.status(200).json({
+              status: "Success",
+              category: doc,
+            });
+          }
+        }
+      );
     }
   } catch (err) {
     res.status(400).json({
@@ -281,7 +281,7 @@ exports.getalldata = async (req, res) => {
     res.status(200).json({
       status: "Success",
       data: {
-        user: user
+        user: user,
       },
     });
   } catch (err) {
@@ -331,7 +331,7 @@ exports.createItem = async (req, res) => {
           image: image_url,
           config: JSON.parse(req.body.config),
           addons: JSON.parse(req.body.addon),
-          description: req.body.description
+          description: req.body.description,
         };
         Item.create(data).then((newItem, err) => {
           if (err) {
@@ -375,7 +375,7 @@ exports.updateItem = async (req, res) => {
     await Item.findOneAndUpdate(
       { _id: req.body._id },
       data,
-      {useFindAndModify: false},
+      { useFindAndModify: false },
       function (err, doc) {
         if (err) {
           res.status(400).json("Error while updating!");

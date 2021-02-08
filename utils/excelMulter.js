@@ -7,24 +7,12 @@ const uploadFile = multer({
   fileFilter: (req, file, callback) => {
     let ext = path.extname(file.originalname);
     if (
-      ext !== '.xlsx' &&
-      ext !== '.xlsm' &&
-      ext !== '.xlsb' &&
-      ext !== '.xltx' &&
-      ext !== '.xltm' &&
-      ext !== '.xls' &&
-      ext !== '.xlt' &&
-      ext !== '.xlts' &&
-      ext !== '.xml' &&
-      ext !== '.xlam' &&
-      ext !== '.xla' &&
-      ext !== '.xlw' &&
-      ext !== '.xlr'
+      ext !== '.csv'
     ) {
-      return callback(res.end('Upload excel file only'), null);
+      return callback('Upload CSV file only', null);
     }
     callback(null, true);
   },
-}).single('excel');
+}).single('file');
 
 module.exports = uploadFile;
