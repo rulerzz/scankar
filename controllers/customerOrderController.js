@@ -9,6 +9,43 @@ let emitcreateorderaction = function (data) {
   console.log("Emitting order creation ping!");
 };
 
+exports.getAll = async (req, res) => {
+  try {
+    let orders;
+    let count;
+    let user = await User.findById(req.params.user);
+    if (user.role == "superadmin") {
+      orders = await CustomerOrder.find()
+        .skip(Number(req.params.offset))
+        .limit(10)
+        .sort({ placed_time: "desc" });
+      count = await CustomerOrder.countDocuments({});
+    } else {
+      orders = await CustomerOrder.find({
+        user: req.params.user
+      })
+        .skip(Number(req.params.offset))
+        .limit(10)
+        .sort({ placed_time: "desc" });
+      count = await CustomerOrder.countDocuments({
+        user: req.params.user,
+      });
+    }
+    res.status(200).json({
+      status: "Success",
+      results: orders.length,
+      data: {
+        orders,
+      },
+      count: count,
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "failed",
+      message: err,
+    });
+  }
+};
 // to get all order
 exports.getAllOrders = async (req, res) => {
   try {
@@ -187,10 +224,16 @@ exports.completeOrder = async (req, res) => {
 
 exports.checktable = async (req, res) => {
   try {
+    const today = moment().startOf("day");
+    console.log(today)
     const order = await CustomerOrder.find({
       tableNo: req.body.tableno,
       status: "Placed",
       user: req.body.user,
+      placed_time: {
+        $gte: today.toDate(),
+        $lte: moment(today).endOf("day").toDate(),
+      },
     });
     res.status(200).json({
       status: "success",

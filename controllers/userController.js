@@ -5,6 +5,7 @@ const bufferToString = require("../utils/convertBufferToStr");
 const cloudinary = require("../utils/cloudinary");
 const mongoose = require("mongoose");
 const csvtojson = require("csvtojson");
+const { create } = require("./../models/userModels");
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find()
@@ -637,3 +638,162 @@ exports.deleteUser = async (req, res) => {
     });
   }
 };
+exports.bulkUpload = async (req, res) => {
+  try {
+    let items = [];
+    let data = await csvstringparse(req.file.buffer.toString());
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][2] !== "") {
+        console.log("Is a product " + data[i][1]);
+        let category = await findCategory(data[i][0], req.params.id);
+        if (category.length == 0) {
+          console.log("Category not found creating it");
+          // No such category so create it
+          let response = await createCategoryB(
+            req.params.id,
+            data[i][0],
+            "",
+            ""
+          );
+          let check = await checkitem(data[i][1],
+              req.params.id);
+          if (!check) {
+            let result = await createItemAndUpdateCategory(
+              {
+                name: data[i][1],
+                user: req.params.id,
+                price: data[i][2],
+                category: response._id,
+                description: data[i][3],
+              },
+              response
+            );
+            console.log(result);
+          } else {
+            console.log("Skipping already exist");
+          }
+        } else {
+          console.log("Category " + category[0].name + "found creating item");
+          // Already category exist for user
+           let check = await checkitem(data[i][1], req.params.id);
+           if (!check) {
+              let result = await createItemAndUpdateCategory(
+                {
+                  name: data[i][1],
+                  user: req.params.id,
+                  price: data[i][2],
+                  category: category[0]._id,
+                  description: data[i][3],
+                },
+                category[0]
+              );
+              console.log(result);
+           }
+           else{
+             console.log("Skipping already exist");
+           }
+        }
+      } else {
+        console.log("Is a configuration");
+      }
+    }
+    res.status(200).send({
+      message: "Processing file: " + req.file.originalname,
+    });
+  } catch (error) {
+    res.status(500).send({
+      message: "Could not upload the file: " + req.file.originalname,
+    });
+  }
+};
+
+async function csvstringparse(csvStr) {
+  const csv = require("csvtojson");
+  return new Promise(function (resolve, reject) {
+    csv({
+      noheader: true,
+      output: "csv",
+    })
+      .fromString(csvStr)
+      .then((csvRow) => {
+        resolve(csvRow);
+      });
+  });
+}
+async function findCategory(name, user) {
+  return new Promise(function (resolve, reject) {
+    Category.find({ name: name, user: user }, function (err, doc) {
+      resolve(doc);
+    });
+  });
+}
+async function createCategoryB(user, name, description, cuisine) {
+  return new Promise(function (resolve, reject) {
+    let data = {
+      user: user,
+      name: name,
+      description: description,
+      cuisine: cuisine,
+    };
+    Category.create(data).then((newCategory, err) => {
+      if (err) {
+        resolve(false);
+      } else {
+        User.findOneAndUpdate(
+          { _id: user },
+          { $push: { categories: newCategory._id } },
+          { new: true, useFindAndModify: false },
+          function (err, doc) {
+            if (err) {
+              resolve(false);
+            } else {
+              resolve(newCategory);
+            }
+          }
+        );
+      }
+    });
+  });
+}
+async function createItemAndUpdateCategory(item, category) {
+  return new Promise(function (resolve, reject) {
+    Item.create(item).then((newItem, err) => {
+      if (err) {
+        resolve(false);
+      } else {
+        Category.findOneAndUpdate(
+          { _id: category._id },
+          { $push: { items: newItem._id } },
+          { new: true, useFindAndModify: false },
+          function (err, doc) {
+            if (err) {
+              resolve(false);
+            } else {
+              resolve(true);
+            }
+          }
+        );
+      }
+    });
+  });
+}
+async function checkitem(name, user) {
+  return new Promise(function (resolve, reject) {
+    Item.find(
+      {
+        name: name,
+        user: user,
+      },
+      function (err, res) {
+        if (err) {
+          resolve(false);
+        } else {
+          if(res.length > 0)
+          resolve(true);
+          else
+          resolve(false);
+        }
+      }
+    );
+  });
+}

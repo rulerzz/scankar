@@ -57,5 +57,5 @@ router
   .delete(deleteUser)
   .post(protect, cloudUpload, uploadpfp);
 router.route("/search/:id").get(findCategoryOrItems);
-//router.route("/bulkupload/:id").post(protect, uploadFile, bulkUpload);
+router.route("/bulkupload/:id").post(protect, uploadFile, bulkUpload);
 module.exports = router;
