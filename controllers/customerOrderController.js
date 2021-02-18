@@ -3,8 +3,10 @@ const User = require("./../models/userModels");
 const mongoose = require("mongoose");
 const moment = require("moment");
 var io = require("../app");
-
+const Item = require('../models/itemModel');
 let emitcreateorderaction = function (data) {
+  //io.to(data.socketid).emit("emitcreateorderaction", data);
+  //console.log("Emitting order creation ping for socketid : "+ data.socketid);
   io.sockets.emit("emitcreateorderaction", data);
   console.log("Emitting order creation ping!");
 };
@@ -22,7 +24,7 @@ exports.getAll = async (req, res) => {
       count = await CustomerOrder.countDocuments({});
     } else {
       orders = await CustomerOrder.find({
-        user: req.params.user
+        user: req.params.user,
       })
         .skip(Number(req.params.offset))
         .limit(10)
@@ -207,6 +209,7 @@ exports.completeOrder = async (req, res) => {
       instruction: req.body.instruction,
       address: req.body.address,
     });
+    order.socketid = req.body.socketid;
     emitcreateorderaction(order);
     res.status(201).json({
       status: "Success",
@@ -225,7 +228,7 @@ exports.completeOrder = async (req, res) => {
 exports.checktable = async (req, res) => {
   try {
     const today = moment().startOf("day");
-    console.log(today)
+    console.log(today);
     const order = await CustomerOrder.find({
       tableNo: req.body.tableno,
       status: "Placed",
@@ -304,6 +307,26 @@ exports.update = async (req, res) => {
     res.status(400).json({
       status: "Error",
       err,
+    });
+  }
+};
+exports.search = async (req, res) => {
+  try {
+    console.log(req.params);
+    Item.find(
+      {
+        name: { $regex: ".*" + req.params.name + ".*" },
+        user: req.params.user,
+      },
+      function (err, doc) {
+        res.status(200).json({
+          item: doc,
+        });
+      }
+    );
+  } catch (err) {
+    res.status(200).json({
+      item: [],
     });
   }
 };
