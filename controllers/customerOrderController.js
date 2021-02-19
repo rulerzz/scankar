@@ -191,6 +191,24 @@ exports.getSingleOrder = async (req, res) => {
     });
   }
 };
+exports.getBill = async (req, res) => {
+  try {
+    const order = await CustomerOrder.findById(req.params.id);
+    const user = await User.findById(order.user);
+    res.status(200).json({
+      status: "Success",
+      data: {
+        order,
+        user
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "failed",
+      message: "Invalid Order ID",
+    });
+  }
+};
 
 // to complete an order
 exports.completeOrder = async (req, res) => {
