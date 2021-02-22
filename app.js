@@ -39,8 +39,7 @@ var certificate = fs.readFileSync("server_scankar_com.crt");
 
 const httpOptions = {
   key : privateKey,
-  cert : certificate,
-  passphrase: 'server'
+  cert : certificate
 };
 
 var server = https.createServer(httpOptions).listen(port, () => {
