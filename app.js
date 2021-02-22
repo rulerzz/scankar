@@ -34,7 +34,7 @@ mongoose
 /*const server = app.listen(port, () => {
   console.log(`Port is running at ${port}`);
 });*/
-var privateKey = fs.readFileSync("key.key");
+var privateKey = fs.readFileSync("SERVERPRIVATEKEY.key");
 var certificate = fs.readFileSync("server_scankar_com.crt");
 
 const httpOptions = {
