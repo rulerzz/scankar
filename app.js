@@ -31,10 +31,10 @@ mongoose
   .catch(() => {
     console.log("PROBLEM CONNECTING DB");
   });
-const server = app.listen(port, () => {
+/*const server = app.listen(port, () => {
   console.log(`Port is running at ${port}`);
-});
-/*var privateKey = fs.readFileSync("SERVERPRIVATEKEY.key");
+});*/
+var privateKey = fs.readFileSync("SERVERPRIVATEKEY.key");
 var certificate = fs.readFileSync("server_scankar_com.crt");
 
 const httpOptions = {
@@ -46,7 +46,7 @@ const httpOptions = {
 var server = https.createServer(httpOptions).listen(port, () => {
   console.log(`Port is running at ${port}`);
 });
-*/
+
 const io = require("socket.io")(server);
 io.on("connection", function (socket) {
   console.log("Socket established with id: " + socket.id);
