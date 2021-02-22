@@ -43,7 +43,7 @@ const httpOptions = {
 };
 
 var server = https.createServer(httpOptions).listen(port, () => {
-  console.log(`Port is running at ${port}`);
+  console.log(`HTTPS Port is running at ${port}`);
 });
 
 const io = require("socket.io")(server);
