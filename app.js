@@ -2,6 +2,8 @@ const express = require("express");
 const morgan = require("morgan");
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
+const fs = require('fs');
+const https = require('https');
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const app = express();
@@ -29,9 +31,22 @@ mongoose
   .catch(() => {
     console.log("PROBLEM CONNECTING DB");
   });
-const server = app.listen(port, () => {
+/*const server = app.listen(port, () => {
+  console.log(`Port is running at ${port}`);
+});*/
+var privateKey = fs.readFileSync("SERVERPRIVATEKEY.key");
+var certificate = fs.readFileSync("server_scankar_com.crt");
+
+const httpOptions = {
+  key : privateKey,
+  cert : certificate,
+  passphrase: 'server'
+};
+
+var server = https.createServer(httpOptions).listen(port, () => {
   console.log(`Port is running at ${port}`);
 });
+
 const io = require("socket.io")(server);
 io.on("connection", function (socket) {
   console.log("Socket established with id: " + socket.id);
