@@ -602,15 +602,15 @@ exports.update = async (req, res) => {
       req.body.configuration = JSON.parse(req.body.configuration)
     }
     if (req.body._id != undefined || req.body._id != null) {
-      await User.updateOne(
+      await User.findOneAndUpdate(
         { _id: req.body._id },
         req.body,
+        { new: true, useFindAndModify: false },
         function (err, doc) {
           if (err) {
-            res.status(400).json({err : err.getMessage()});
+            res.status(400).json(JSON.stringify(err));
           }
           //handle it
-
           res.status(200).json({
             status: "successfully updated!",
           });
