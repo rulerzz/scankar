@@ -598,7 +598,7 @@ exports.updateUser = async (req, res) => {
 };
 exports.update = async (req, res) => {
   try {
-    if(req.body.configuration !== undefined){
+    if(req.body.configuration !== undefined && req.body.configuration.length > 0){
       req.body.configuration = JSON.parse(req.body.configuration)
     }
     if (req.body._id != undefined || req.body._id != null) {
@@ -608,7 +608,10 @@ exports.update = async (req, res) => {
         { new: true, useFindAndModify: false },
         function (err, doc) {
           if (err) {
-            res.status(400).json(JSON.stringify(err));
+            console.log(err)
+            res.status(400).json({
+              err : err.message
+            });
           }
           //handle it
           res.status(200).json({
@@ -620,6 +623,7 @@ exports.update = async (req, res) => {
       console.log("Id not defined");
     }
   } catch (err) {
+    console.log(err)
     res.status(400).json({
       status: "Error",
       err,
