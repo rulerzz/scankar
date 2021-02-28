@@ -607,7 +607,7 @@ exports.update = async (req, res) => {
         req.body,
         function (err, doc) {
           if (err) {
-            res.status(400).json(err);
+            res.status(400).json(err.message);
           }
           //handle it
 
