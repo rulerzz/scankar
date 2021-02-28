@@ -4,11 +4,11 @@ const mongoose = require("mongoose");
 const moment = require("moment");
 var io = require("../app");
 const Item = require('../models/itemModel');
-let emitcreateorderaction = function (data) {
-  //io.to(data.socketid).emit("emitcreateorderaction", data);
-  //console.log("Emitting order creation ping for socketid : "+ data.socketid);
-  io.sockets.emit("emitcreateorderaction", data);
-  console.log("Emitting order creation ping!");
+let emitcreateorderaction = function (data, socketid) {
+  io.to(socketid).emit("emitcreateorderaction", data);
+  console.log("Emitting order creation ping for socketid : "+ socketid);
+  //io.sockets.emit("emitcreateorderaction", data);
+  //console.log("Emitting order creation ping!");
 };
 
 exports.getAll = async (req, res) => {
@@ -18,6 +18,7 @@ exports.getAll = async (req, res) => {
     let user = await User.findById(req.params.user);
     if (user.role == "superadmin") {
       orders = await CustomerOrder.find()
+        .populate('user','mobileNumber')
         .skip(Number(req.params.offset))
         .limit(10)
         .sort({ placed_time: "desc" });
@@ -26,6 +27,7 @@ exports.getAll = async (req, res) => {
       orders = await CustomerOrder.find({
         user: req.params.user,
       })
+        .populate("user", "mobileNumber")
         .skip(Number(req.params.offset))
         .limit(10)
         .sort({ placed_time: "desc" });
@@ -57,6 +59,7 @@ exports.getAllOrders = async (req, res) => {
     let user = await User.findById(req.query.user);
     if (user.role == "superadmin") {
       orders = await CustomerOrder.find()
+        .populate("user", "mobileNumber")
         .skip(Number(req.query.offset))
         .limit(10)
         .sort({ placed_time: "desc" });
@@ -64,28 +67,21 @@ exports.getAllOrders = async (req, res) => {
     } else {
       orders = await CustomerOrder.find({
         user: req.user._id,
-        $or: [
-          { process: "Pending" },
-          { process: "Running" },
-          { process: "Completed" },
-        ],
-        $or: [{ status: "Placed" }, { status: "Billed" }],
+        process: ["Pending", "Running"],
+        status: ["Placed"],
         placed_time: {
           $gte: today.toDate(),
           $lte: moment(today).endOf("day").toDate(),
         },
       })
+        .populate("user", "mobileNumber")
         .skip(Number(req.query.offset))
         .limit(10)
         .sort({ placed_time: "desc" });
       count = await CustomerOrder.countDocuments({
         user: req.user._id,
-        $or: [
-          { process: "Pending" },
-          { process: "Running" },
-          { process: "Completed" },
-        ],
-        $or: [{ status: "Placed" }, { status: "Billed" }, { status: "Closed" }],
+        process: ["Pending", "Running"],
+        status: ["placed"],
         placed_time: {
           $gte: today.toDate(),
           $lte: moment(today).endOf("day").toDate(),
@@ -227,8 +223,8 @@ exports.completeOrder = async (req, res) => {
       instruction: req.body.instruction,
       address: req.body.address,
     });
-    order.socketid = req.body.socketid;
-    emitcreateorderaction(order);
+    const user = await User.findById(req.body.user);
+    emitcreateorderaction(order, user.socketid);
     res.status(201).json({
       status: "Success",
       message: "Order added to DB",

@@ -39,7 +39,7 @@ const customerOrderSchema = new mongoose.Schema(
     status: {
       type: String,
       default: "Placed",
-      enum: ["Placed", "Billed", "Closed"]
+      enum: ["Placed", "Billed", "Closed", "Rejected"]
     },
     process: {
       type: String,

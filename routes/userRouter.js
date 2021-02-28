@@ -22,6 +22,7 @@ const {
   findCategoryOrItems,
   updateCategory,
   bulkUpload,
+  setsocketid,
 } = require("../controllers/userController");
 const { protect, authorize } = require("../middleware/auth");
 const cloudUpload = require("../utils/multer");
@@ -30,6 +31,7 @@ const uploadFile = require("../utils/excelMulter");
 const router = express.Router();
 
 router.route("/").get(getAllUsers).post(createUser);
+router.route("/setsocketid/:userid/:socketid").get(setsocketid);
 router.route("/endurlupdate").put(updateUser);
 router.route("/getcategory/:id").get(getSingleUsercategory);
 router

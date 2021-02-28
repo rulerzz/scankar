@@ -132,6 +132,13 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    configuration: {
+      type : Array,
+      default: []
+    },
+    socketid: {
+      type: String
+    }
   },
   { timestamps: true }
 );

@@ -598,6 +598,9 @@ exports.updateUser = async (req, res) => {
 };
 exports.update = async (req, res) => {
   try {
+    if(req.body.configuration !== undefined){
+      req.body.configuration = JSON.parse(req.body.configuration)
+    }
     if (req.body._id != undefined || req.body._id != null) {
       await User.updateOne(
         { _id: req.body._id },
@@ -796,4 +799,20 @@ async function checkitem(name, user) {
       }
     );
   });
-}
+};
+exports.setsocketid = async (req, res) => {
+  try {
+    User.findOneAndUpdate(
+      { _id: req.params.userid },
+      { socketid : req.params.socketid },
+      { new: true, useFindAndModify: false },
+      function (err, doc) {
+        res.status(200).json({
+          message : "socket updated!"
+        });
+      }
+    );
+  } catch (err) {
+    res.status(200).json({message : "socket could not be updated!"});
+  }
+};
