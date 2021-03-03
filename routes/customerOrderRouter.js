@@ -11,6 +11,7 @@ const {
   getAll,
   search,
   getBill,
+  searchordersforuser,
 } = require("../controllers/customerOrderController");
 const { protect, authorize } = require('../middleware/auth');
 

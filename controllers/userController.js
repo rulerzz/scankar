@@ -1,4 +1,5 @@
 const User = require("./../models/userModels");
+const CustomerOrder = require('./../models/customerOrderModel');
 const Category = require("./../models/categoryModel");
 const Item = require("./../models/itemModel");
 const bufferToString = require("../utils/convertBufferToStr");
@@ -6,6 +7,13 @@ const cloudinary = require("../utils/cloudinary");
 const mongoose = require("mongoose");
 const csvtojson = require("csvtojson");
 const { create } = require("./../models/userModels");
+var io = require("../app");
+
+let emitcallwaiterping = function (socketid, tableNo) {
+  io.to(socketid).emit("callwaiterping", tableNo);
+  console.log("Emitting call waiter ping for socketid : "+ socketid);
+};
+
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find()
@@ -819,4 +827,22 @@ exports.setsocketid = async (req, res) => {
   } catch (err) {
     res.status(200).json({message : "socket could not be updated!"});
   }
+};
+exports.sendping = async (req, res) => {
+  try {
+    User.findById(req.params.id)
+      .select("socketid")
+      .then((user) => {
+        emitcallwaiterping(user.socketid, req.params.tableNo);
+        res.status(200).json({ message: "socket pinged!" });
+      });
+  } catch (err) {
+    res.status(200).json({ message: "socket could not be updated!" });
+  }
+};
+exports.searchordersforuser = async (req, res) => {
+  let orders = await CustomerOrder.find({ userId : req.params.id }).populate('user');
+  res.status(200).json({
+    orders: orders,
+  });
 };

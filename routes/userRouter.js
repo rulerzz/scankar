@@ -23,6 +23,8 @@ const {
   updateCategory,
   bulkUpload,
   setsocketid,
+  sendping,
+  searchordersforuser,
 } = require("../controllers/userController");
 const { protect, authorize } = require("../middleware/auth");
 const cloudUpload = require("../utils/multer");
@@ -60,4 +62,6 @@ router
   .post(protect, cloudUpload, uploadpfp);
 router.route("/search/:id").get(findCategoryOrItems);
 router.route("/bulkupload/:id").post(protect, uploadFile, bulkUpload);
+router.route("/sendping/:id/:tableNo").get(sendping);
+router.route("/orders/:id").get(searchordersforuser);
 module.exports = router;

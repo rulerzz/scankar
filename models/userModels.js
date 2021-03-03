@@ -9,18 +9,15 @@ const userSchema = new mongoose.Schema(
     firstName: {
       type: String,
       maxlength: 32,
-      required: [true, "Please add  firstname"],
       trim: true,
     },
     lastName: {
       type: String,
       maxlength: 32,
-      required: [true, "Please add lastname"],
       trim: true,
     },
     email: {
       type: String,
-      required: true,
       trim: true,
       unique: true,
       loadClass: true,
@@ -109,7 +106,6 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, "Please add a password"],
       minlength: 8,
       select: false,
     },
@@ -138,6 +134,9 @@ const userSchema = new mongoose.Schema(
     },
     socketid: {
       type: String
+    },
+    otp: {
+      type : String
     }
   },
   { timestamps: true }

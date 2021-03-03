@@ -3,9 +3,10 @@ const User = require("../models/userModels");
 const ErrorResponse = require("../utils/errorResponse");
 const asyncHandler = require("../middleware/async");
 const sendEmail = require("../utils/emailHandler");
-// routes
-
-// register 
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const http = require("http");
+// register
 exports.register = asyncHandler(async (req, res) => {
   try {
     const {
@@ -183,3 +184,206 @@ exports.getMe = asyncHandler(async (req, res, next) => {
     user,
   });
 });
+exports.userLogin = (request, response, next) => {
+  User.find({ email: request.body.user })
+    .select('+password')
+    .then((user) => {
+      if (user.length < 1) {
+        // Check for phone
+        User.find({mobileNumber : request.body.user}).select('+password').then((phone) => {
+          if (phone.length < 1) {
+            return next(new ErrorResponse("Invalid User", 401));
+          }
+          else{
+            checkPassword(phone, request.body.password).then((result) => {
+              if (result) {
+                const token = jwt.sign(
+                  { id: phone._id },
+                  process.env.JWT_SECRET,
+                  {
+                    expiresIn: process.env.JWT_EXPIRE,
+                  }
+                );
+
+                const options = {
+                  expires: new Date(
+                    Date.now() + process.env.JWT_COOKIE_EXPIRE * 60 * 60 * 100
+                  ),
+                  httpOnly: true,
+                };
+
+                if (process.env.NODE_ENV === "production") {
+                  options.secure = true;
+                }
+
+                response.status(200).json({
+                  status: "Success",
+                  message: "User matched!",
+                  token,
+                  user : phone,
+                });
+              } else {
+                response.status(400).json({
+                  status: "Error",
+                  message: "Passwords do not match!",
+                });
+              }
+            });
+          }
+        });
+      }
+      // GOT A MATCH CHECK PASS
+      else {
+        checkPassword(user, request.body.password).then((result) => {
+          if (result) {
+            const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+              expiresIn: process.env.JWT_EXPIRE,
+            });
+
+            const options = {
+              expires: new Date(
+                Date.now() + process.env.JWT_COOKIE_EXPIRE * 60 * 60 * 100
+              ),
+              httpOnly: true,
+            };
+
+            if (process.env.NODE_ENV === "production") {
+              options.secure = true;
+            }
+
+            response.status(200).json({
+              status: "Success",
+              message: "User matched!",
+              token,
+              user,
+            });
+          } else {
+            response.status(400).json({
+              status: "Error",
+              message: "Passwords do not match!",
+            });
+          }
+        });
+      }
+    })
+    .catch((findError) => {
+      response.status(400).json({
+        status: "Error",
+        message: findError.message,
+      });
+    });
+};
+function checkPassword(user, password) {
+  return new Promise((resolve) => {
+    bcrypt.compare(password, user[0].password, function (err, result) {
+      resolve(result);
+    });
+  });
+}
+exports.userRegister = (request, response, next) => {
+  User.create(request.body)
+    .then((user) => {
+       response.status(200).json({
+         status: "Success"
+       });
+    })
+    .catch((findError) => {
+      response.status(400).json({
+        status: "Error",
+        code: findError,
+        message: findError.message,
+      });
+    });
+};
+exports.sendotp = (request, response, next) => {
+  //var otpGenerator = require("otp-generator");
+  //let otp = otpGenerator.generate(6, { upperCase: false, specialChars: false , alphabets : false});
+  User.find({ mobileNumber: request.body.phone }).then((user) => {
+    if(user.length < 1){
+      // CREATE USER
+        // SEND OTP
+        sendotp(request.body.phone , 0);
+         response.status(200).json({
+           status: "success",
+         });
+    }
+    else{
+      // UPDATE OTP FIELD AND SEND OTP TO HIS PHONE
+      sendotp(request.body.phone , 1);
+       response.status(200).json({
+         status: "success",
+       });
+    }
+  });
+};
+exports.userExists = (request, response, next) => {
+  User.find({ mobileNumber : request.body.phone })
+    .then((user) => {
+      if(user.length < 1){
+        response.status(200).json({
+          status: 1,
+        });
+      }
+      else{
+        response.status(200).json({
+          status: 0,
+        });
+      }
+    });
+};
+function sendotp(phone, val){
+  const req = http.request(
+    "http://sms.smsmenow.in/generateOtp.jsp?userid=busrest&key=2897245792XX&mobileno=+91" +
+      phone +
+      "&timetoalive=60",
+    (res) => {
+      res.on("data", (d) => {
+        let parse = JSON.parse(d);
+        if(val === 0){
+          User.create({
+            mobileNumber: phone,
+            ownerType: "registered",
+            role: "user",
+            otp: parse.otpId,
+          }).then((data) => {
+          });
+        }else{
+          User.updateOne(
+            { mobileNumber: phone },
+            { otp: parse.otpId },
+            { new: true, useFindAndModify: false },
+            function (err, doc) {
+            }
+          );
+        }
+      });
+    }
+  );
+  req.on("error", function (e) {
+    console.log("problem with request: " + e.message);
+  });
+  // write data to request body
+  req.write("data\n");
+  req.write("data\n");
+  req.end();
+};
+exports.otplogin = (request, response, next) => {
+  User.find({ mobileNumber: request.body.phone })
+    .then((user) => {
+      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+        expiresIn: process.env.JWT_EXPIRE,
+      });
+      response.status(200).json({
+        status: "Success",
+        message: "User matched!",
+        token,
+        user: user,
+      });
+    })
+    .catch((findError) => {
+      response.status(400).json({
+        status: "Error",
+        message: findError.message,
+      });
+    });
+};

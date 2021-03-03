@@ -8,50 +8,49 @@ const customerOrderSchema = new mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true
+      required: true,
     },
-    items: [
-
-    ],
+    items: [],
     booker: {
-      type: String
+      type: String,
     },
     userId: {
-      type: String
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
     price: {
-      type: Number
+      type: Number,
     },
     discount: {
-      type: Number
+      type: Number,
     },
     orderType: {
       type: String,
       default: "Take Home",
       enum: ["Dine In", "Take Home", "Delivery"],
-      required: true
+      required: true,
     },
     address: String,
     placed_time: {
       type: Date,
-      default: Date.now
+      default: Date.now,
     },
     status: {
       type: String,
       default: "Placed",
-      enum: ["Placed", "Billed", "Closed", "Rejected"]
+      enum: ["Placed", "Billed", "Closed", "Rejected"],
     },
     process: {
       type: String,
       default: "Pending",
-      enum: ["Pending", "Running", "Completed", "Rejected"]
+      enum: ["Pending", "Running", "Completed","Delivered", "Rejected"],
     },
     instruction: {
       type: String,
-      default: ""
+      default: "",
     },
     tableNo: {
-      type: Number
+      type: Number,
     },
   },
   { timestamps: true }

@@ -10,7 +10,10 @@ let emitcreateorderaction = function (data, socketid) {
   //io.sockets.emit("emitcreateorderaction", data);
   //console.log("Emitting order creation ping!");
 };
-
+let emitorderupdate = function (data, socketid) {
+  io.to(socketid).emit("emitorderupdate", data);
+  console.log("Emitting order update ping for socketid : " + socketid);
+};
 exports.getAll = async (req, res) => {
   try {
     let orders;
@@ -222,6 +225,7 @@ exports.completeOrder = async (req, res) => {
       placed_time: req.body.placed_time,
       instruction: req.body.instruction,
       address: req.body.address,
+      userId : req.body.userId
     });
     const user = await User.findById(req.body.user);
     emitcreateorderaction(order, user.socketid);
@@ -268,21 +272,14 @@ exports.updateOrderStatus = async (req, res) => {
   try {
     const order = await CustomerOrder.findByIdAndUpdate(
       req.params.id,
-      {
-        orderType: req.body.orderType,
-        booker: req.body.booker,
-        price: req.body.price,
-        items: req.body.items,
-        discount: req.body.discount,
-        instruction: req.body.instruction,
-        address: req.body.address,
-      },
+        req.body,
       {
         new: true,
         useFindAndModify: false,
       }
     );
-
+    let ruser = await User.findById(req.body.user._id).select('socketid');
+    emitorderupdate(order,ruser.socketid);
     res.status(200).json({
       status: "success",
       data: {
