@@ -299,6 +299,7 @@ exports.sendotp = (request, response, next) => {
   //var otpGenerator = require("otp-generator");
   //let otp = otpGenerator.generate(6, { upperCase: false, specialChars: false , alphabets : false});
   User.find({ mobileNumber: request.body.phone }).then((user) => {
+    console.log(user)
     if(user.length < 1){
       // CREATE USER
         // SEND OTP
