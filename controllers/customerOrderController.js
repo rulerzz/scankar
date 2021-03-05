@@ -21,7 +21,7 @@ exports.getAll = async (req, res) => {
     let user = await User.findById(req.params.user);
     if (user.role == "superadmin") {
       orders = await CustomerOrder.find()
-        .populate('user','mobileNumber')
+        .populate('userId','mobileNumber')
         .skip(Number(req.params.offset))
         .limit(10)
         .sort({ placed_time: "desc" });
@@ -30,7 +30,7 @@ exports.getAll = async (req, res) => {
       orders = await CustomerOrder.find({
         user: req.params.user,
       })
-        .populate("user", "mobileNumber")
+        .populate("userId", "mobileNumber")
         .skip(Number(req.params.offset))
         .limit(10)
         .sort({ placed_time: "desc" });
@@ -62,7 +62,7 @@ exports.getAllOrders = async (req, res) => {
     let user = await User.findById(req.query.user);
     if (user.role == "superadmin") {
       orders = await CustomerOrder.find()
-        .populate("user", "mobileNumber")
+        .populate("userId", "mobileNumber")
         .skip(Number(req.query.offset))
         .limit(10)
         .sort({ placed_time: "desc" });
@@ -77,7 +77,7 @@ exports.getAllOrders = async (req, res) => {
           $lte: moment(today).endOf("day").toDate(),
         },
       })
-        .populate("user", "mobileNumber")
+        .populate("userId", "mobileNumber")
         .skip(Number(req.query.offset))
         .limit(10)
         .sort({ placed_time: "desc" });
@@ -141,7 +141,7 @@ exports.getOtherOrders = async (req, res) => {
         $gte: today.toDate(),
         $lte: moment(today).endOf("day").toDate(),
       },
-    }).sort({ placed_time: "desc" });
+    }).populate('userId','mobileNumber').sort({ placed_time: "desc" });
 
     res.status(200).json({
       status: "Success",
@@ -176,7 +176,7 @@ exports.getnewOrders = async (req, res) => {
 // to get a single order
 exports.getSingleOrder = async (req, res) => {
   try {
-    const order = await CustomerOrder.findById(req.params.id);
+    const order = await CustomerOrder.findById(req.params.id).populate('user').populate('userId','mobileNumber');
     res.status(200).json({
       status: "Success",
       data: {
@@ -278,6 +278,7 @@ exports.updateOrderStatus = async (req, res) => {
         useFindAndModify: false,
       }
     );
+    order.populate('user').populate('userId', 'mobileNumber');
     let ruser = await User.findById(req.body.user._id).select('socketid');
     emitorderupdate(order,ruser.socketid);
     res.status(200).json({
@@ -287,6 +288,7 @@ exports.updateOrderStatus = async (req, res) => {
       },
     });
   } catch (err) {
+    console.log(err)
     res.status(400).json({
       status: "Error",
       err,
@@ -326,7 +328,7 @@ exports.search = async (req, res) => {
     console.log(req.params);
     Item.find(
       {
-        name: { $regex: ".*" + req.params.name + ".*" },
+        name: { $regex: new RegExp(req.params.name, "i") },
         user: req.params.user,
       },
       function (err, doc) {

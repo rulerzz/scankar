@@ -303,17 +303,11 @@ exports.sendotp = (request, response, next) => {
     if(user.length < 1){
       // CREATE USER
         // SEND OTP
-        sendotp(request.body.phone , 0);
-         response.status(200).json({
-           status: "success",
-         });
+        sendotp(request.body.phone , 0, response);
     }
     else{
       // UPDATE OTP FIELD AND SEND OTP TO HIS PHONE
-      sendotp(request.body.phone , 1);
-       response.status(200).json({
-         status: "success",
-       });
+      sendotp(request.body.phone , 1, response);
     }
   });
 };
@@ -332,7 +326,7 @@ exports.userExists = (request, response, next) => {
       }
     });
 };
-function sendotp(phone, val){
+function sendotp(phone, val ,response){
   const req = http.request(
     "http://sms.smsmenow.in/generateOtp.jsp?userid=busrest&key=2897245792XX&mobileno=+91" +
       phone +
@@ -347,6 +341,9 @@ function sendotp(phone, val){
             role: "user",
             otp: parse.otpId,
           }).then((data) => {
+            response.status(200).json({
+              status: "success",
+            });
           });
         }else{
           User.updateOne(
@@ -354,6 +351,9 @@ function sendotp(phone, val){
             { otp: parse.otpId },
             { new: true, useFindAndModify: false },
             function (err, doc) {
+              response.status(200).json({
+                status: "success",
+              });
             }
           );
         }
@@ -361,7 +361,9 @@ function sendotp(phone, val){
     }
   );
   req.on("error", function (e) {
-    console.log("problem with request: " + e.message);
+    response.status(400).json({
+      status: "error",
+    });
   });
   // write data to request body
   req.write("data\n");

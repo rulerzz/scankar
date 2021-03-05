@@ -97,6 +97,12 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true,
       unique: true,
+      validate: {
+        validator: function (v) {
+          return /\+?\d[\d -]{8,12}\d/.test(v);
+        },
+        message: "{VALUE} is not a valid 10 digit number!",
+      }
     },
     photo: String,
     status: {
@@ -121,7 +127,7 @@ const userSchema = new mongoose.Schema(
     ownerType: {
       type: String,
       default: "returantowner",
-      enum: ["returantowner", "hotelowner","registered"],
+      enum: ["returantowner", "hotelowner", "registered"],
       required: false,
     },
     createdAt: {
@@ -129,15 +135,15 @@ const userSchema = new mongoose.Schema(
       default: Date.now,
     },
     configuration: {
-      type : Array,
-      default: []
+      type: Array,
+      default: [],
     },
     socketid: {
-      type: String
+      type: String,
     },
     otp: {
-      type : String
-    }
+      type: String,
+    },
   },
   { timestamps: true }
 );
