@@ -31,6 +31,7 @@
     "parser": "^0.1.4",
     "path": "^0.12.7",
     "read-excel-file": "^4.0.6",
+    "requests": "^0.3.0",
     "socket.io": "^2.3.0",
     "validator": "^13.1.1",
     "web-push": "^3.4.4"

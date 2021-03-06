@@ -8,6 +8,7 @@ const jwt = require("jsonwebtoken");
 const http = require("http");
 const path = require("path");
 const fs = require("fs");
+const requests = require("requests");
 // register
 exports.register = asyncHandler(async (req, res) => {
   try {
@@ -188,51 +189,52 @@ exports.getMe = asyncHandler(async (req, res, next) => {
 });
 exports.userLogin = (request, response, next) => {
   User.find({ email: request.body.user })
-    .select('+password')
+    .select("+password")
     .then((user) => {
       if (user.length < 1) {
         // Check for phone
-        User.find({mobileNumber : request.body.user}).select('+password').then((phone) => {
-          if (phone.length < 1) {
-            return next(new ErrorResponse("Invalid User", 401));
-          }
-          else{
-            checkPassword(phone, request.body.password).then((result) => {
-              if (result) {
-                const token = jwt.sign(
-                  { id: phone._id },
-                  process.env.JWT_SECRET,
-                  {
-                    expiresIn: process.env.JWT_EXPIRE,
+        User.find({ mobileNumber: request.body.user })
+          .select("+password")
+          .then((phone) => {
+            if (phone.length < 1) {
+              return next(new ErrorResponse("Invalid User", 401));
+            } else {
+              checkPassword(phone, request.body.password).then((result) => {
+                if (result) {
+                  const token = jwt.sign(
+                    { id: phone._id },
+                    process.env.JWT_SECRET,
+                    {
+                      expiresIn: process.env.JWT_EXPIRE,
+                    }
+                  );
+
+                  const options = {
+                    expires: new Date(
+                      Date.now() + process.env.JWT_COOKIE_EXPIRE * 60 * 60 * 100
+                    ),
+                    httpOnly: true,
+                  };
+
+                  if (process.env.NODE_ENV === "production") {
+                    options.secure = true;
                   }
-                );
 
-                const options = {
-                  expires: new Date(
-                    Date.now() + process.env.JWT_COOKIE_EXPIRE * 60 * 60 * 100
-                  ),
-                  httpOnly: true,
-                };
-
-                if (process.env.NODE_ENV === "production") {
-                  options.secure = true;
+                  response.status(200).json({
+                    status: "Success",
+                    message: "User matched!",
+                    token,
+                    user: phone,
+                  });
+                } else {
+                  response.status(400).json({
+                    status: "Error",
+                    message: "Passwords do not match!",
+                  });
                 }
-
-                response.status(200).json({
-                  status: "Success",
-                  message: "User matched!",
-                  token,
-                  user : phone,
-                });
-              } else {
-                response.status(400).json({
-                  status: "Error",
-                  message: "Passwords do not match!",
-                });
-              }
-            });
-          }
-        });
+              });
+            }
+          });
       }
       // GOT A MATCH CHECK PASS
       else {
@@ -285,9 +287,9 @@ function checkPassword(user, password) {
 exports.userRegister = (request, response, next) => {
   User.create(request.body)
     .then((user) => {
-       response.status(200).json({
-         status: "Success"
-       });
+      response.status(200).json({
+        status: "Success",
+      });
     })
     .catch((findError) => {
       response.status(400).json({
@@ -301,85 +303,110 @@ exports.sendotp = (request, response, next) => {
   //var otpGenerator = require("otp-generator");
   //let otp = otpGenerator.generate(6, { upperCase: false, specialChars: false , alphabets : false});
   User.find({ mobileNumber: request.body.phone }).then((user) => {
-    console.log(user)
-    if(user.length < 1){
+    console.log("NEW OTP REQUEST FOR " +request.body.phone);
+    fs.appendFileSync(
+      path.resolve(__dirname, "log.json"),
+      JSON.stringify({ phone: request.body.phone, Status: "start" })
+    );
+    if (user.length < 1) {
       // CREATE USER
-        // SEND OTP
-        sendotp(request.body.phone , 0, response);
-    }
-    else{
+      // SEND OTP
+      console.log("USER NOT FOUND");
+      fs.appendFileSync(
+        path.resolve(__dirname, "log.json"),
+        JSON.stringify({ phone: request.body.phone, Status: "phone not found" })
+      );
+      sendotp(request.body.phone, 0, response);
+    } else {
       // UPDATE OTP FIELD AND SEND OTP TO HIS PHONE
-      sendotp(request.body.phone , 1, response);
+      console.log("FOUND USER");
+      fs.appendFileSync(
+        path.resolve(__dirname, "log.json"),
+        JSON.stringify({ phone: request.body.phone, Status: "user found" })
+      );
+      sendotp(request.body.phone, 1, response);
     }
   });
 };
 exports.userExists = (request, response, next) => {
-  User.find({ mobileNumber : request.body.phone })
-    .then((user) => {
-      if(user.length < 1){
-        response.status(200).json({
-          status: 1,
-        });
-      }
-      else{
-        response.status(200).json({
-          status: 0,
-        });
-      }
-    });
+  User.find({ mobileNumber: request.body.phone }).then((user) => {
+    if (user.length < 1) {
+      response.status(200).json({
+        status: 1,
+      });
+    } else {
+      response.status(200).json({
+        status: 0,
+      });
+    }
+  });
 };
-function sendotp(phone, val ,response){
-  const req = http.request(
+function sendotp(phone, val, response) {
+  fs.appendFileSync(
+    path.resolve(__dirname, "log.json"),
+    JSON.stringify({ phone: phone, status: "sending otp request" })
+  );
+  //SENDING OTP 
+  console.log("SENDING OTP TO "+ phone);
+  requests(
     "http://sms.smsmenow.in/generateOtp.jsp?userid=busrest&key=2897245792XX&mobileno=+91" +
-      phone +
-      "&timetoalive=60",
-    (res) => {
-      res.on("data", (d) => {
-        let parse = JSON.parse(d);
-        fs.appendFileSync(
-          path.resolve(__dirname, "log.json"),
-          JSON.stringify({phone : phone , parseResponse : parse})
-        );
-        if(val === 0){
-          User.create({
-            mobileNumber: phone,
-            ownerType: "registered",
-            role: "user",
-            otp: parse.otpId,
-          }).then((data) => {
+      phone + "&timetoalive=60")
+    .on("data", function (chunk) {
+      console.log("RESPONSE SUCCESS OTP");
+      let parse = JSON.parse(chunk);
+      fs.appendFileSync(
+        path.resolve(__dirname, "log.json"),
+        JSON.stringify({ phone: phone, status: "success otp response", parseResponse: parse })
+      );
+      if (val === 0) {
+        User.create({
+          mobileNumber: phone,
+          ownerType: "registered",
+          role: "user",
+          otp: parse.otpId,
+        }).then((data) => {
+          console.log("CREATED NEW USER");
+          fs.appendFileSync(
+            path.resolve(__dirname, "log.json"),
+            JSON.stringify({ phone: phone, Status: "creted user" })
+          );
+          response.status(200).json({
+            status: "success",
+          });
+        });
+      } else {
+        User.updateOne(
+          { mobileNumber: phone },
+          { otp: parse.otpId },
+          { new: true, useFindAndModify: false },
+          function (err, doc) {
+            console.log("UPDATED XISTING USER");
+            fs.appendFileSync(
+              path.resolve(__dirname, "log.json"),
+              JSON.stringify({ phone: phone, Status: "updated existing user otp" })
+            );
             response.status(200).json({
               status: "success",
             });
-          });
-        }else{
-          User.updateOne(
-            { mobileNumber: phone },
-            { otp: parse.otpId },
-            { new: true, useFindAndModify: false },
-            function (err, doc) {
-              response.status(200).json({
-                status: "success",
-              });
-            }
-          );
-        }
-      });
-    }
-  );
-  req.on("error", function (e) {
-    fs.appendFileSync(
-      path.resolve(__dirname, "log.json"),
-      JSON.stringify({ phone: phone, error : e })
-    );
-    response.status(400).json({
-      status: "error",
+          }
+        );
+      }
+    })
+    .on("end", function (err) {
+      console.log("REQUEST END");
+      fs.appendFileSync(
+        path.resolve(__dirname, "log.json"),
+        JSON.stringify({ phone: phone, status: "end" })
+      );
+      if(err){
+        fs.appendFileSync(
+          path.resolve(__dirname, "log.json"),
+          JSON.stringify({ phone: phone, status: "error", Error : err })
+        );
+      }
+      console.log("end");
     });
-  });
-  // write data to request body
-  req.write("data\n");
-  req.write("data\n");
-  req.end();
-};
+}
 exports.otplogin = (request, response, next) => {
   User.find({ mobileNumber: request.body.phone })
     .then((user) => {
