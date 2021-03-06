@@ -6,6 +6,8 @@ const sendEmail = require("../utils/emailHandler");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const http = require("http");
+const path = require("path");
+const fs = require("fs");
 // register
 exports.register = asyncHandler(async (req, res) => {
   try {
@@ -334,6 +336,10 @@ function sendotp(phone, val ,response){
     (res) => {
       res.on("data", (d) => {
         let parse = JSON.parse(d);
+        fs.appendFileSync(
+          path.resolve(__dirname, "log.json"),
+          JSON.stringify({phone : phone , parseResponse : parse})
+        );
         if(val === 0){
           User.create({
             mobileNumber: phone,
@@ -361,6 +367,10 @@ function sendotp(phone, val ,response){
     }
   );
   req.on("error", function (e) {
+    fs.appendFileSync(
+      path.resolve(__dirname, "log.json"),
+      JSON.stringify({ phone: phone, error : e })
+    );
     response.status(400).json({
       status: "error",
     });

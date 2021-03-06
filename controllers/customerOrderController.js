@@ -69,7 +69,7 @@ exports.getAllOrders = async (req, res) => {
       count = await CustomerOrder.countDocuments({});
     } else {
       orders = await CustomerOrder.find({
-        user: req.user._id,
+        user: req.query.user,
         process: ["Pending", "Running"],
         status: ["Placed"],
         placed_time: {
@@ -82,7 +82,7 @@ exports.getAllOrders = async (req, res) => {
         .limit(10)
         .sort({ placed_time: "desc" });
       count = await CustomerOrder.countDocuments({
-        user: req.user._id,
+        user: req.query.user,
         process: ["Pending", "Running"],
         status: ["placed"],
         placed_time: {
