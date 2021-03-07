@@ -18,15 +18,15 @@ const DB = process.env.DATABASE.replace(
 );
 
 mongoose
-  .connect(DB, {
+  .connect("mongodb://localhost:27017/scankar?retryWrites=true&w=majority", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useCreateIndex: true,
   })
   .then(() => {
-    console.log("DB CONNECTED SUCCESSFULLY AT " + process.env.DATABASE);
-    console.log("DB USER " + process.env.DATABASE_USERNAME);
-    console.log("DB PASS " + process.env.DATABASE_PASSWORD);
+    console.log("DB CONNECTED SUCCESSFULLY AT " + "LOCALHOST");
+    //console.log("DB USER " + process.env.DATABASE_USERNAME);
+    //console.log("DB PASS " + process.env.DATABASE_PASSWORD);
   })
   .catch(() => {
     console.log("PROBLEM CONNECTING DB");
