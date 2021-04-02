@@ -350,7 +350,11 @@ function sendotp(phone, val, response) {
   console.log("SENDING OTP TO "+ phone);
   requests(
     "http://sms.smsmenow.in/generateOtp.jsp?userid=busrest&key=2897245792XX&mobileno=+91" +
-      phone + "&timetoalive=60&sms=Your One Time Password is: {otp} Thank You Regards, www.scankar.com" )
+      phone + "&tempid=1407161727331367237&timetoalive=60&sms=Your One Time Password is: {otp}
+Thank You
+
+Regards,
+www.scankar.com" )
     .on("data", function (chunk) {
       console.log("RESPONSE SUCCESS OTP");
       let parse = JSON.parse(chunk);
