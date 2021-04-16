@@ -17,7 +17,7 @@ const { protect } = require('../middleware/auth');
 const router = express.Router();
 
 router.route('/:id').get(protect, getSingleOrder);
-router.route("/getbill/:id").get(protect, getBill);
+router.route("/getbill/:id").get(getBill);
 router.route('/').get(protect,getAllOrders);
 router.route('/update-order/:id').patch(protect, updateOrderStatus);
 router.route("/update-status/:id").patch(protect, update);
