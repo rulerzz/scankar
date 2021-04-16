@@ -1,7 +1,4 @@
 const mongoose = require("mongoose");
-const completedOrderModel = require("./completedOrderModel");
-const User = require("./userModels");
-const ObjectId = mongoose.ObjectId;
 
 const customerOrderSchema = new mongoose.Schema(
   {

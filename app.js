@@ -25,7 +25,7 @@ mongoose
   })
   .then(() => {
     console.log("DB CONNECTED SUCCESSFULLY AT " + "LOCALHOST");
-    //console.log("DB USER " + process.env.DATABASE_USERNAME);
+    //console.log("DB " + process.env.DATABASE);
     //console.log("DB PASS " + process.env.DATABASE_PASSWORD);
   })
   .catch(() => {
@@ -59,9 +59,8 @@ module.exports = io;
 // My routes
 const userRouter = require("./routes/userRouter");
 const customerOrderRouter = require("./routes/customerOrderRouter");
-const authRoute = require("./routes/authRoute");
-const itemRoute = require("./routes/itemRoute");
-// const logInRoute = require('./routes/logInRoute');
+const authRouter = require("./routes/authRouter");
+const statisticRouter = require("./routes/statisticRouter");
 
 app.use(cors());
 app.use(function (req, res, next) {
@@ -83,7 +82,6 @@ if (process.env.NODE_ENV === "development") {
 // routes
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/customer-order", customerOrderRouter);
-app.use("/api/v1/", authRoute);
-app.use("/api/v1/item", itemRoute);
-
+app.use("/api/v1/", authRouter);
+app.use("/api/v1/statistic", statisticRouter);
 // server

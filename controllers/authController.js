@@ -342,10 +342,6 @@ exports.userExists = (request, response, next) => {
   });
 };
 function sendotp(phone, val, response) {
-  fs.appendFileSync(
-    path.resolve(__dirname, "log.json"),
-    JSON.stringify({ phone: phone, status: "sending otp request" })
-  );
   //SENDING OTP 
   console.log("SENDING OTP TO "+ phone);
   requests(
@@ -354,10 +350,7 @@ function sendotp(phone, val, response) {
     .on("data", function (chunk) {
       console.log("RESPONSE SUCCESS OTP");
       let parse = JSON.parse(chunk);
-      fs.appendFileSync(
-        path.resolve(__dirname, "log.json"),
-        JSON.stringify({ phone: phone, status: "success otp response", parseResponse: parse })
-      );
+  
       if (val === 0) {
         User.create({
           mobileNumber: phone,
@@ -365,11 +358,6 @@ function sendotp(phone, val, response) {
           role: "user",
           otp: parse.otpId,
         }).then((data) => {
-          console.log("CREATED NEW USER");
-          fs.appendFileSync(
-            path.resolve(__dirname, "log.json"),
-            JSON.stringify({ phone: phone, Status: "creted user" })
-          );
           response.status(200).json({
             status: "success",
           });
@@ -380,11 +368,6 @@ function sendotp(phone, val, response) {
           { otp: parse.otpId },
           { new: true, useFindAndModify: false },
           function (err, doc) {
-            console.log("UPDATED XISTING USER");
-            fs.appendFileSync(
-              path.resolve(__dirname, "log.json"),
-              JSON.stringify({ phone: phone, Status: "updated existing user otp" })
-            );
             response.status(200).json({
               status: "success",
             });
@@ -393,17 +376,7 @@ function sendotp(phone, val, response) {
       }
     })
     .on("end", function (err) {
-      console.log("REQUEST END");
-      fs.appendFileSync(
-        path.resolve(__dirname, "log.json"),
-        JSON.stringify({ phone: phone, status: "end" })
-      );
-      if(err){
-        fs.appendFileSync(
-          path.resolve(__dirname, "log.json"),
-          JSON.stringify({ phone: phone, status: "error", Error : err })
-        );
-      }
+      if(err)
       console.log("end");
     });
 }

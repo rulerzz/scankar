@@ -26,30 +26,31 @@ const {
   sendping,
   searchordersforuser,
 } = require("../controllers/userController");
-const { protect, authorize } = require("../middleware/auth");
+
+const { protect } = require("../middleware/auth");
 const cloudUpload = require("../utils/multer");
 const uploadFile = require("../utils/excelMulter"); 
 
 const router = express.Router();
 
-router.route("/").get(getAllUsers).post(createUser);
-router.route("/setsocketid/:userid/:socketid").get(setsocketid);
-router.route("/endurlupdate").put(updateUser);
-router.route("/getcategory/:id").get(getSingleUsercategory);
+router.route("/").get(protect, getAllUsers).post(protect, createUser);
+router.route("/setsocketid/:userid/:socketid").get(protect, setsocketid);
+router.route("/endurlupdate").put(protect, updateUser);
+router.route("/getcategory/:id").get(protect, getSingleUsercategory);
 router
   .route("/category/:id/:name/:description/:cuisine")
-  .get(getSingleUsercategoryitm)
+  .get(protect, getSingleUsercategoryitm)
   .post(protect, cloudUpload, createCategory)
   .put(protect, cloudUpload, updateCategory);
-router.route("/deletecategory/:userid/:categoryid").get(deleteCategory);
+router.route("/deletecategory/:userid/:categoryid").get(protect, deleteCategory);
 router.route("/update").put(update);
 router
   .route("/insertuseritem/:id")
-  .get(getalldata)
+  .get(protect, getalldata)
   .post(protect, cloudUpload, createItem);
-router.route("/deleteuseritem/:id/:categoryid").get(deleteItem);
+router.route("/deleteuseritem/:id/:categoryid").get(protect, deleteItem);
 router.route("/servicecharge/:id").post(protect, setCharge);
-router.route("/updateitemrouter").post(updateItem);
+router.route("/updateitemrouter").post(protect, updateItem);
 router
   .route("/updatepictureitemroute")
   .post(protect, cloudUpload, updateItemWithPic);
@@ -57,11 +58,11 @@ router.route("/gst/:id").post(protect, setGst);
 router.route("/search").get(protect, getAllUsersData);
 router
   .route("/:id")
-  .get(getSingleUser)
-  .delete(deleteUser)
+  .get(protect, getSingleUser)
+  .delete(protect, deleteUser)
   .post(protect, cloudUpload, uploadpfp);
-router.route("/search/:id").get(findCategoryOrItems);
+router.route("/search/:id").get(protect, findCategoryOrItems);
 router.route("/bulkupload/:id").post(protect, uploadFile, bulkUpload);
-router.route("/sendping/:id/:tableNo").get(sendping);
-router.route("/orders/:id").get(searchordersforuser);
+router.route("/sendping/:id/:tableNo").get(protect, sendping);
+router.route("/orders/:id").get(protect, searchordersforuser);
 module.exports = router;
