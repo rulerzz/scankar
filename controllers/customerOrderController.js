@@ -326,17 +326,15 @@ exports.update = async (req, res) => {
 exports.search = async (req, res) => {
   try {
     console.log(req.params);
-    Item.find(
+    let items = await Item.find(
       {
         name: { $regex: new RegExp(req.params.name, "i") },
         user: req.params.user,
-      },
-      function (err, doc) {
-        res.status(200).json({
-          item: doc,
-        });
       }
-    );
+    ).populate({ path: 'category', populate : { path: 'items' } });
+    res.status(200).json({
+      item: items,
+    });
   } catch (err) {
     res.status(200).json({
       item: [],
