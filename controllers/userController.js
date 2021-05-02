@@ -846,3 +846,12 @@ exports.searchordersforuser = async (req, res) => {
     orders: orders,
   });
 };
+exports.filteruser = async (req, res) => {
+  let users = await User.find({
+    firstName: { $regex: new RegExp(req.params.name, "i") },
+    user: req.params.user,
+  });
+  res.status(200).json({
+    users
+  });
+};

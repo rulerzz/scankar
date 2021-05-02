@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const customerOrderSchema = new mongoose.Schema(
+const roomOrderSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
@@ -24,7 +24,7 @@ const customerOrderSchema = new mongoose.Schema(
     orderType: {
       type: String,
       default: "Take Home",
-      enum: ["Dine In", "Take Home", "Delivery","Room"],
+      enum: ["Dine In", "Take Home", "Delivery"],
       required: true,
     },
     address: String,
@@ -49,11 +49,8 @@ const customerOrderSchema = new mongoose.Schema(
     tableNo: {
       type: Number,
     },
-    roomNo: {
-      type: Number,
-    },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("CustomerOrder", customerOrderSchema);
+module.exports = mongoose.model("RoomOrder", roomOrderSchema);

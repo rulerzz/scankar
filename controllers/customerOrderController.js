@@ -219,6 +219,7 @@ exports.completeOrder = async (req, res) => {
       booker: req.body.booker,
       price: req.body.price,
       tableNo: Number(req.body.tableNo),
+      roomNo: Number(req.body.roomNo),
       user: mongoose.Types.ObjectId(req.body.user),
       items: req.body.items,
       discount: req.body.discount,
@@ -249,6 +250,31 @@ exports.checktable = async (req, res) => {
     console.log(today);
     const order = await CustomerOrder.find({
       tableNo: req.body.tableno,
+      status: "Placed",
+      user: req.body.user,
+      placed_time: {
+        $gte: today.toDate(),
+        $lte: moment(today).endOf("day").toDate(),
+      },
+    });
+    res.status(200).json({
+      status: "success",
+      data: order,
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "Error",
+      err,
+    });
+  }
+};
+
+exports.checkroom = async (req, res) => {
+  try {
+    const today = moment().startOf("day");
+    console.log(today);
+    const order = await CustomerOrder.find({
+      roomNo: req.body.roomno,
       status: "Placed",
       user: req.body.user,
       placed_time: {

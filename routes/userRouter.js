@@ -25,6 +25,7 @@ const {
   setsocketid,
   sendping,
   searchordersforuser,
+  filteruser,
 } = require("../controllers/userController");
 
 const { protect } = require("../middleware/auth");
@@ -65,4 +66,5 @@ router.route("/search/:id").get(protect, findCategoryOrItems);
 router.route("/bulkupload/:id").post(protect, uploadFile, bulkUpload);
 router.route("/sendping/:id/:tableNo").get(protect, sendping);
 router.route("/orders/:id").get(protect, searchordersforuser);
+router.route("/query/:name").get(protect, filteruser);
 module.exports = router;

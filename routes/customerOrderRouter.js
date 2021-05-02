@@ -11,6 +11,7 @@ const {
   getAll,
   search,
   getBill,
+  checkroom,
 } = require("../controllers/customerOrderController");
 const { protect } = require('../middleware/auth');
 
@@ -25,6 +26,7 @@ router.route("/orderinfo/:id").get(protect, getOrders);
 router.route("/otherorders/:id").get(protect, getOtherOrders);
 router.route("/completeorder").post(protect, completeOrder);
 router.route("/checktable").post(protect, checktable);
+router.route("/checkroom").post(protect, checkroom);
 router.route("/:offset/:user").get(protect, getAll);
 router.route("/searchitems/:user/:name").get(protect, search);
 

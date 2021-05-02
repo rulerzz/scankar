@@ -117,6 +117,11 @@ const userSchema = new mongoose.Schema(
     },
     tableCount: {
       type: Number,
+      default: 0,
+    },
+    roomsCount: {
+      type: Number,
+      default: 0,
     },
     role: {
       type: String,
@@ -143,6 +148,14 @@ const userSchema = new mongoose.Schema(
     },
     otp: {
       type: String,
+    },
+    takeawaystatus: {
+      type: Boolean,
+      default: false,
+    },
+    deliverstatus: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }
