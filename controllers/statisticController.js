@@ -13,6 +13,7 @@ exports.getStatistics = async (req, res) => {
 
     let grouped = await CustomerOrder.aggregate([
       { "$match": {
+        "user": req.params.id,
         "createdAt": { "$gte": thirtyDays }
       }},
       {$group: {
