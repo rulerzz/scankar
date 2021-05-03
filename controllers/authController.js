@@ -381,7 +381,7 @@ function sendotp(phone, val, response) {
     });
 }
 exports.otplogin = async (request, response, next) => {
-  let update = await User.findOneAndUpdate({ _id : user._id } , { firstName : request.body.name });
+  let update = await User.findOneAndUpdate({ mobileNumber: request.body.phone } , { firstName : request.body.name });
   User.find({ mobileNumber: request.body.phone })
     .then((user) => {
       const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
