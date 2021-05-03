@@ -39,6 +39,10 @@ const itemSchema = new mongoose.Schema(
     description: {
       type: String
     },
+    bestselling: {
+      type: Boolean,
+      default: false,
+    }
   },
   { timestamps: true }
 );

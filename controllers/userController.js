@@ -8,10 +8,11 @@ const mongoose = require("mongoose");
 const csvtojson = require("csvtojson");
 const { create } = require("./../models/userModels");
 var io = require("../app");
+const Offer = require("../models/offerModel");
 
 let emitcallwaiterping = function (socketid, tableNo) {
   io.to(socketid).emit("callwaiterping", tableNo);
-  console.log("Emitting call waiter ping for socketid : "+ socketid);
+  console.log("Emitting call waiter ping for socketid : " + socketid);
 };
 
 exports.getAllUsers = async (req, res) => {
@@ -606,7 +607,7 @@ exports.updateUser = async (req, res) => {
 };
 exports.update = async (req, res) => {
   try {
-    if(req.body.configuration !== undefined && req.body.configuration.length > 0){
+    if (req.body.configuration !== undefined && req.body.configuration.length > 0) {
       req.body.configuration = JSON.parse(req.body.configuration)
     }
     if (req.body._id != undefined || req.body._id != null) {
@@ -618,7 +619,7 @@ exports.update = async (req, res) => {
           if (err) {
             console.log(err)
             res.status(400).json({
-              err : err.message
+              err: err.message
             });
           }
           //handle it
@@ -671,7 +672,7 @@ exports.bulkUpload = async (req, res) => {
             ""
           );
           let check = await checkitem(data[i][1],
-              req.params.id);
+            req.params.id);
           if (!check) {
             let result = await createItemAndUpdateCategory(
               {
@@ -690,23 +691,23 @@ exports.bulkUpload = async (req, res) => {
         } else {
           console.log("Category " + category[0].name + "found creating item");
           // Already category exist for user
-           let check = await checkitem(data[i][1], req.params.id);
-           if (!check) {
-              let result = await createItemAndUpdateCategory(
-                {
-                  name: data[i][1],
-                  user: req.params.id,
-                  price: data[i][2],
-                  category: category[0]._id,
-                  description: data[i][3],
-                },
-                category[0]
-              );
-              console.log(result);
-           }
-           else{
-             console.log("Skipping already exist");
-           }
+          let check = await checkitem(data[i][1], req.params.id);
+          if (!check) {
+            let result = await createItemAndUpdateCategory(
+              {
+                name: data[i][1],
+                user: req.params.id,
+                price: data[i][2],
+                category: category[0]._id,
+                description: data[i][3],
+              },
+              category[0]
+            );
+            console.log(result);
+          }
+          else {
+            console.log("Skipping already exist");
+          }
         }
       } else {
         console.log("Is a configuration");
@@ -803,10 +804,10 @@ async function checkitem(name, user) {
         if (err) {
           resolve(false);
         } else {
-          if(res.length > 0)
-          resolve(true);
+          if (res.length > 0)
+            resolve(true);
           else
-          resolve(false);
+            resolve(false);
         }
       }
     );
@@ -816,16 +817,16 @@ exports.setsocketid = async (req, res) => {
   try {
     User.findOneAndUpdate(
       { _id: req.params.userid },
-      { socketid : req.params.socketid },
+      { socketid: req.params.socketid },
       { new: true, useFindAndModify: false },
       function (err, doc) {
         res.status(200).json({
-          message : "socket updated!"
+          message: "socket updated!"
         });
       }
     );
   } catch (err) {
-    res.status(200).json({message : "socket could not be updated!"});
+    res.status(200).json({ message: "socket could not be updated!" });
   }
 };
 exports.sendping = async (req, res) => {
@@ -841,7 +842,7 @@ exports.sendping = async (req, res) => {
   }
 };
 exports.searchordersforuser = async (req, res) => {
-  let orders = await CustomerOrder.find({ userId : req.params.id }).populate('user');
+  let orders = await CustomerOrder.find({ userId: req.params.id }).populate('user');
   res.status(200).json({
     orders: orders,
   });
@@ -854,4 +855,96 @@ exports.filteruser = async (req, res) => {
   res.status(200).json({
     users
   });
+};
+// to create an user
+exports.getoffers = async (req, res) => {
+  try {
+    const offers = await Offer.find({ user: req.params.id });
+    res.status(200).json({
+      offers
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "Error",
+      err,
+    });
+  }
+};
+exports.createOffer = async (req, res) => {
+  try {
+    let imageContent = bufferToString(req.file.originalname, req.file.buffer)
+      .content;
+    const img = await cloudinary.uploader.upload(imageContent);
+    const image_url = img.secure_url;
+    let data = {
+      user: req.body.id,
+      image: image_url,
+      name: req.body.name,
+      description: req.body.description,
+      price: req.body.price,
+      items: JSON.parse(req.body.items)
+    };
+    const offer = await Offer.create(data);
+    res.status(200).json({
+      offer
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "failed",
+      message: err,
+    });
+    console.log(err);
+  }
+};
+exports.updateOffer = async (req, res) => {
+  try {
+    let offer = {
+      name : req.body.name,
+      description: req.body.description,
+      price: req.body.price,
+      items: JSON.parse(req.body.items)
+    };
+    if (req.body.photo != "undefined") {
+      // UPLOAD PIC AND UPDATE
+      let imageContent = bufferToString(req.file.originalname, req.file.buffer)
+        .content;
+      await cloudinary.uploader.upload(imageContent, (err, imageResponse) => {
+        if (err) throw err;
+        else {
+          offer.image = imageResponse.secure_url;
+          Offer.findByIdAndUpdate(
+            req.body.id ,
+            offer,
+            { useFindAndModify: false },
+            function (err, doc) {
+              if (err) {
+                throw err;
+              } else {
+                res.status(200).json({doc});
+              }
+            }
+          );
+        }
+      });
+    } else {
+      // DONT UPDATE PIC
+      Offer.findByIdAndUpdate(
+        req.body.id,
+        offer,
+        { useFindAndModify: false },
+        function (err, doc) {
+          if (err) {
+            throw err;
+          } else {
+            res.status(200).json(doc);
+          }
+        }
+      );
+    }
+  } catch (err) {
+    res.status(400).json({
+      status: "failed",
+      message: err,
+    });
+  }
 };

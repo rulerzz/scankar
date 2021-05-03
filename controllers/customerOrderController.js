@@ -1,9 +1,12 @@
 const CustomerOrder = require("../models/customerOrderModel");
 const User = require("./../models/userModels");
+const Offer = require("./../models/offerModel");
+const Room = require("../models/roomModel");
 const mongoose = require("mongoose");
 const moment = require("moment");
 var io = require("../app");
 const Item = require('../models/itemModel');
+
 let emitcreateorderaction = function (data, socketid) {
   io.to(socketid).emit("emitcreateorderaction", data);
   console.log("Emitting order creation ping for socketid : "+ socketid);
@@ -212,6 +215,24 @@ exports.getBill = async (req, res) => {
 // to complete an order
 exports.completeOrder = async (req, res) => {
   try {
+    if(req.body.roomNo !== 0 && req.body.roomNo !== undefined){
+      const room = await Room.find({user : req.body.user, room: req.body.roomNo});
+      console.log(room);
+      if(room.length == 0){
+        Room.create({ user: req.body.user,
+          room: req.body.roomNo - 1,
+          status: true,
+        });
+      }
+      else{
+        if(!room[0].status){
+          Room.findByIdAndUpdate( req.body.user, {
+            room: req.body.roomNo,
+            status: true,
+          });
+        }
+      }
+    }
     let order = await CustomerOrder.create({
       orderType: req.body.orderType,
       status: req.body.status,
@@ -364,6 +385,52 @@ exports.search = async (req, res) => {
   } catch (err) {
     res.status(200).json({
       item: [],
+    });
+  }
+};
+exports.changebestsellingstatus = async (req, res) => {
+  try {
+    const item = await Item.findByIdAndUpdate(req.body.itemid,{
+        bestselling: req.body.status,
+      });
+    res.status(200).json({
+      item
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "Error",
+      err,
+    });
+  }
+};
+exports.allbestsellingitems = async (req, res) => {
+  try {
+    const items = await Item.find({
+        user : req.params.id,
+        bestselling: true ,
+      });
+    res.status(200).json({
+      items
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "Error",
+      err,
+    });
+  }
+};
+exports.alloffers = async (req, res) => {
+  try {
+    const offers = await Offer.find({
+        user : req.params.id
+      });
+    res.status(200).json({
+      offers
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "Error",
+      err,
     });
   }
 };

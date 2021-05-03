@@ -26,11 +26,12 @@ const {
   sendping,
   searchordersforuser,
   filteruser,
+  getoffers, createOffer, updateOffer, deleteOffer
 } = require("../controllers/userController");
 
 const { protect } = require("../middleware/auth");
 const cloudUpload = require("../utils/multer");
-const uploadFile = require("../utils/excelMulter"); 
+const uploadFile = require("../utils/excelMulter");
 
 const router = express.Router();
 
@@ -44,6 +45,13 @@ router
   .post(protect, cloudUpload, createCategory)
   .put(protect, cloudUpload, updateCategory);
 router.route("/deletecategory/:userid/:categoryid").get(protect, deleteCategory);
+router.route("/getoffers/:id").get(protect, getoffers);
+router
+  .route("/createoffer")
+  .post(protect, cloudUpload, createOffer);
+router
+  .route("/updateoffer")
+  .put(protect, cloudUpload, updateOffer);
 router.route("/update").put(update);
 router
   .route("/insertuseritem/:id")

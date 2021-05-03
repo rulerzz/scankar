@@ -9,7 +9,7 @@ const cors = require("cors");
 const app = express();
 dotenv.config({ path: "./config.env" });
 
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 4000;
 
 // DB Connection
 const DB = process.env.DATABASE.replace(

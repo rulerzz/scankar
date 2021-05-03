@@ -12,6 +12,9 @@ const {
   search,
   getBill,
   checkroom,
+  changebestsellingstatus,
+  allbestsellingitems,
+  alloffers,
 } = require("../controllers/customerOrderController");
 const { protect } = require('../middleware/auth');
 
@@ -27,6 +30,9 @@ router.route("/otherorders/:id").get(protect, getOtherOrders);
 router.route("/completeorder").post(protect, completeOrder);
 router.route("/checktable").post(protect, checktable);
 router.route("/checkroom").post(protect, checkroom);
+router.route("/changebestsellingstatus").post(protect, changebestsellingstatus);
+router.route("/allbestsellingitems/:id").get(protect, allbestsellingitems);
+router.route("/alloffers/:id").get(protect, alloffers);
 router.route("/:offset/:user").get(protect, getAll);
 router.route("/searchitems/:user/:name").get(protect, search);
 
