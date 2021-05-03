@@ -18,15 +18,15 @@ const DB = process.env.DATABASE.replace(
 );
 
 mongoose
-  //.connect("mongodb://localhost:27017/scankar?retryWrites=true&w=majority", {
-  .connect("mongodb+srv://admin:admin@scankar.4fg1d.mongodb.net/scankar?retryWrites=true&w=majority", {
+  .connect("mongodb://localhost:27017/scankar?retryWrites=true&w=majority", {
+  //.connect("mongodb+srv://admin:admin@scankar.4fg1d.mongodb.net/scankar?retryWrites=true&w=majority", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useCreateIndex: true,
   })
   .then(() => {
-    //console.log("DB CONNECTED SUCCESSFULLY AT " + "LOCALHOST");
-    console.log("DB mongodb+srv://admin:admin@scankar.4fg1d.mongodb.net/scankar?retryWrites=true&w=majority");
+    console.log("DB CONNECTED SUCCESSFULLY AT " + "LOCALHOST");
+    //console.log("DB mongodb+srv://admin:admin@scankar.4fg1d.mongodb.net/scankar?retryWrites=true&w=majority");
     //console.log("DB PASS " + process.env.DATABASE_PASSWORD);
   })
   .catch(() => {
