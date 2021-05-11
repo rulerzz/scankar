@@ -848,10 +848,7 @@ exports.searchordersforuser = async (req, res) => {
   });
 };
 exports.filteruser = async (req, res) => {
-  let users = await User.find({
-    firstName: { $regex: new RegExp(req.params.name, "i") },
-    user: req.params.user,
-  });
+  let users = await User.find({"$or": [ { "firstName" : { $regex: new RegExp(req.params.name, "i") }}, { "lastName" : { $regex: new RegExp(req.params.name, "i") }}, { "email" : { $regex: new RegExp(req.params.name, "i") }}, { "mobileNumber" : { $regex: new RegExp(req.params.name, "i") }}]});
   res.status(200).json({
     users
   });
@@ -947,4 +944,8 @@ exports.updateOffer = async (req, res) => {
       message: err,
     });
   }
+};
+exports.deleteOffer = async (req, res) => {
+  const offer = await Offer.findByIdAndDelete(req.params.id);
+  res.status(200).json(offer);
 };

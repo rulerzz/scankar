@@ -74,5 +74,6 @@ router.route("/search/:id").get(protect, findCategoryOrItems);
 router.route("/bulkupload/:id").post(protect, uploadFile, bulkUpload);
 router.route("/sendping/:id/:tableNo").get(protect, sendping);
 router.route("/orders/:id").get(protect, searchordersforuser);
+router.route("/removeoffer/:id").get(protect, deleteOffer);
 router.route("/query/:name").get(protect, filteruser);
 module.exports = router;
